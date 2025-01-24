@@ -1,10 +1,10 @@
 
 
 export interface User{
-    _id:string;
-    username:string;
+    id:number;
+    username:string | null;
     email:string;
     password:string;
-    profilePic:string;
-    
+    profilePic?:string | null;
+
 }

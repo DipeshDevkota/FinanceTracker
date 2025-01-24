@@ -17,10 +17,13 @@ model Post {
 }
 
 model User {
-  id       Int      @id @default(autoincrement()) // Auto incrementing ID
-  name     String
-  password String  @default("secret")
-  username String  @unique
-  email    String   @unique
-  posts    Post[]   // One-to-many relationship with posts
+  id         Int      @id @default(autoincrement()) // Auto-incrementing ID
+  profilePic String?  // Optional field (not required)
+  password   String   @default("secret")
+  username   String  @unique
+  email      String   @unique
+  posts      Post[]   // One-to-many relationship with posts
 }
+
+
+    
