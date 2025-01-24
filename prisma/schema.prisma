@@ -1,0 +1,24 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Will use the DATABASE_URL from .env
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Post {
+  id       Int      @id @default(autoincrement()) // Auto incrementing ID
+  title    String
+  content  String
+  createdAt DateTime @default(now()) // Automatically set the creation timestamp
+  authorId Int      // Foreign key to User
+  author   User     @relation(fields: [authorId], references: [id]) // One-to-many relationship
+}
+
+model User {
+  id       Int      @id @default(autoincrement()) // Auto incrementing ID
+  name     String
+  email    String   @unique
+  posts    Post[]   // One-to-many relationship with posts
+}
