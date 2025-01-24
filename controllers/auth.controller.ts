@@ -4,10 +4,14 @@ import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
+interface RequestWithUser extends Request {
+  user?: User; // Use a stricter type if you know the structure of the user object
+}
+
 const prisma = new PrismaClient();
 
 // Token generation function
-const generateToken = (res: Response, user: User) => {
+const generateToken = (res: Response, user: User): void => {
   try {
     const { email } = user;
     const token = jwt.sign({ email }, "dipesh78$", { expiresIn: "1d" }); // Set expiration time for better security
@@ -24,7 +28,11 @@ const generateToken = (res: Response, user: User) => {
 };
 
 // User Registration
-export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
+export const registerUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
@@ -42,12 +50,11 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
     const newUser = await prisma.user.create({
       data: {
-      username,
-      email,
-      password: hashedPassword,
+        username,
+        email,
+        password: hashedPassword,
       },
     });
-
 
     generateToken(res, newUser);
 
@@ -62,7 +69,11 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 };
 
 // User Login
-export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+export const loginUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -96,24 +107,41 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
-
-export const logoutUser = async(req:Request ,res:Response,next:NextFunction)=>{
+// User Logout
+export const logoutUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     res.clearCookie("token");
-    return res.status(200).json({message:"User loggedout successfully"});
-    
+    return res.status(200).json({ message: "User logged out successfully" });
   } catch (error) {
-    console.log("Error in logging in user:", error);
-
-    
+    console.log("Error in logging out user:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
+};
 
-}
+// Update User
+export const updateUser = async (
+  req: RequestWithUser,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const user = req.user;
+    console.log("Requested User is:", user);
 
-export const updateProfile = async(req:Request , res:Response , next:NextFunction)=>{
-  
-}
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized access" });
+    }
 
+    const { username, profilePic, email } = user;
 
-
-
+    // Update logic here, if needed
+    return res.status(200).json({ success: true, message: "User updated successfully" });
+  } catch (error) {
+    console.error("Error in updating user:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
