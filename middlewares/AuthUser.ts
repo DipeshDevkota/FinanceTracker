@@ -9,13 +9,18 @@ interface AuthenticatedRequest extends Request {
   user?: any;
 }
 
-const authUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authUser = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {  // Ensuring that the return type is `void`
   try {
     const token = req.cookies.token; // Access the token from cookies
     console.log("Token is:", token);
 
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized access" });
+      res.status(401).json({ message: "Unauthorized access" });
+      return; // Ensure the function exits after response
     }
 
     // Decode the token
@@ -26,24 +31,24 @@ const authUser = async (req: AuthenticatedRequest, res: Response, next: NextFunc
     const { _id } = decodedToken as { _id: string };
 
     if (!_id) {
-      return res.status(401).json({ message: "Unauthorized access" });
+      res.status(401).json({ message: "Unauthorized access" });
+      return; // Ensure the function exits after response
     }
 
     // Find the user in the database by ID
     const user = await prisma.user.findUnique({ where: { id: parseInt(_id, 10) } });
     if (!user) {
-      return res.status(401).json({ message: "Unauthorized access" });
+      res.status(401).json({ message: "Unauthorized access" });
+      return; // Ensure the function exits after response
     }
 
     // Attach the user object to the request
     req.user = user;
 
-    // Move to the next middleware or route handler
+    // Call the next middleware or route handler
     next();
   } catch (error) {
     console.error("Error in authUser middleware:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-export default authUser;

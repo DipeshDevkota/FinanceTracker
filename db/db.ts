@@ -12,3 +12,6 @@ const client = new Client({
 client.connect()
 .then(()=> console.log("Connected to database"))
 .catch((err)=> console.log(err));
+
+
+export default client;
