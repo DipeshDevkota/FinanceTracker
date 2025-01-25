@@ -1,21 +1,28 @@
-import { PrismaClient } from '@prisma/client';
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { PrismaClient } from "@prisma/client";
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
 // Extend the Request interface to include a `user` field
 interface AuthenticatedRequest extends Request {
   user?: any;
+  cookie?:any;
 }
 
 export const authUser = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {  // Ensuring that the return type is `void`
+): Promise<void> => {
+  // Ensuring that the return type is `void`
   try {
-    const token = req.cookies.token; // Access the token from cookies
+    console.log("AUthmiddleware called");
+    console.log("Request is:",req);
+    const cookie = req.cookie;
+    console.log("Cookies is:", cookie);
+    const token = req.cookies.token;
+    console.log("Token is ", token); // Access the token from cookies
     console.log("Token is:", token);
 
     if (!token) {
@@ -36,7 +43,9 @@ export const authUser = async (
     }
 
     // Find the user in the database by ID
-    const user = await prisma.user.findUnique({ where: { id: parseInt(_id, 10) } });
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(_id, 10) },
+    });
     if (!user) {
       res.status(401).json({ message: "Unauthorized access" });
       return; // Ensure the function exits after response

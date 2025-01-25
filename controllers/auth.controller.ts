@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { User } from './../types/userType';
-import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import { Request, Response, NextFunction } from "express";
+import { User } from "./../types/userType";
+import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 interface RequestWithUser extends Request {
   user?: User; // Use a stricter type if you know the structure of the user object
@@ -33,18 +33,20 @@ export const registerUser = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  console.log("registeruser is called")
+  console.log("registerUser is called");
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
-    return res.status(400).render('error', { message: "Invalid credentials" });
+    res.status(400).json({ message: "Invalid credentials" });
+    return;
   }
 
   try {
     const userExists = await prisma.user.findUnique({ where: { email } });
 
     if (userExists) {
-      return res.status(400).render('error', { message: "User already exists" });
+      res.status(400).json({ message: "User already exists" });
+      return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -57,12 +59,14 @@ export const registerUser = async (
       },
     });
 
-    generateToken(res, newUser);
+    console.log("New user is",newUser);
 
-    return res.status(201).render('success', { message: "User registered successfully" });
+    generateToken(res,newUser);
+    res.status(201).json({ message: "User registered successfully" });
+    return;
   } catch (error) {
     console.error("Error in creating user:", error);
-    return res.status(500).render('error', { message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -75,30 +79,38 @@ export const loginUser = async (
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).render('error', { message: "Invalid credentials" });
+    res.status(400).json({ message: "Invalid credentials" });
+    return;
   }
 
   try {
-    const userExists = await prisma.user.findUnique({
+    console.log("Loggedin user is called");
+    const userExists = (await prisma.user.findUnique({
       where: { email },
-    }) as User | null;
+    })) as User | null;
 
     if (!userExists) {
-      return res.status(404).render('error', { message: "User doesn't exist" });
+      res.status(404).json({ message: "User doesn't exist" });
+      return;
     }
 
     const isPasswordValid = await bcrypt.compare(password, userExists.password);
+    console.log("Password is",isPasswordValid);
 
     if (!isPasswordValid) {
-      return res.status(400).render('error', { message: "Invalid password" });
+      res.status(400).json({ message: "Invalid password" });
+      return;
     }
 
-    generateToken(res, userExists);
+    console.log("Userexists after loggedin is",userExists);
 
-    return res.status(200).render('success', { message: "User logged in successfully" });
+
+
+    generateToken(res, userExists);
+    res.status(200).json({ message: "User logged in successfully" });
   } catch (error) {
-    console.log("Error in logging in user:", error);
-    return res.status(500).render('error', { message: "Internal server error" });
+    console.error("Error in logging in user:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -110,10 +122,10 @@ export const logoutUser = async (
 ): Promise<void> => {
   try {
     res.clearCookie("token");
-    return res.status(200).render('success', { message: "User logged out successfully" });
+    res.status(200).json({ message: "User logged out successfully" });
   } catch (error) {
-    console.log("Error in logging out user:", error);
-    return res.status(500).render('error', { message: "Internal server error" });
+    console.error("Error in logging out user:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -125,18 +137,18 @@ export const updateUser = async (
 ): Promise<void> => {
   try {
     const user = req.user;
-    console.log("Requested User is:", user);
 
     if (!user) {
-      return res.status(401).render('error', { message: "Unauthorized access" });
+      res.status(401).json({ message: "Unauthorized access" });
+      return;
     }
 
     const { username, profilePic, email } = user;
 
-    // Update logic here, if needed
-    return res.status(200).render('success', { message: "User updated successfully" });
+    // Add update logic if needed
+    res.status(200).json({ message: "User updated successfully" });
   } catch (error) {
     console.error("Error in updating user:", error);
-    return res.status(500).render('error', { message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
