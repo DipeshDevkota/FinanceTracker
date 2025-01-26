@@ -30,7 +30,7 @@ export const authUser = async (
     }
 
     // Decode the token
-    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN as string) as jwt.JwtPayload;
+    const decodedToken = jwt.verify(token, process.env.REFRESH_TOKEN as string) as jwt.JwtPayload;
     console.log("Decoded token is:", decodedToken);
 
     // Extract `_id` from the decoded token

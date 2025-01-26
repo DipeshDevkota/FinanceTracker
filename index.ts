@@ -15,8 +15,8 @@ app.get('/',(req:any,res:any)=>{
 
 
 
-app.listen(3000,()=>{
-    console.log('Sever is running on port 3000');
+app.listen(3005,()=>{
+    console.log('Sever is running on port 3005');
 
 })
 
