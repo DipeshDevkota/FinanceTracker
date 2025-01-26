@@ -3,6 +3,8 @@ const app = express();
 import cookieParser from 'cookie-parser';
 import {userRouter} from './routes/user.routes'
 const bodyParser= require('body-parser');
+
+require('dotenv').config();
 app.use(bodyParser.json());
 app.use(cookieParser())
 

@@ -22,7 +22,7 @@ export const authUser = async (
     const cookie = req?.cookies;
     console.log("Cookies is:", cookie);
     const token = req.cookies.token;
-    console.log("Token is ", token); // Access the token from cookies
+    console.log("Token  inauthmiddleware is ", token); // Access the token from cookies
 
     if (!token) {
       res.status(401).json({ message: "Unauthorized access" });
@@ -30,7 +30,7 @@ export const authUser = async (
     }
 
     // Decode the token
-    const decodedToken = jwt.verify(token, "dipesh78$") as jwt.JwtPayload;
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN as string) as jwt.JwtPayload;
     console.log("Decoded token is:", decodedToken);
 
     // Extract `_id` from the decoded token
@@ -52,6 +52,7 @@ export const authUser = async (
 
     // Attach the user object to the request
     req.user = user;
+    console.log("User in auth middleware is:",req.user);
 
     // Call the next middleware or route handler
     next();
