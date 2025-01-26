@@ -3,18 +3,19 @@ import { User } from "./../types/userType";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+const prisma = new PrismaClient();
 
 interface RequestWithUser extends Request {
-  user?: User; // Use a stricter type if you know the structure of the user object
+  user?: User;
+  // Use a stricter type if you know the structure of the user object
 }
-
-const prisma = new PrismaClient();
 
 // Token generation function
 const generateToken = (res: Response, user: User): void => {
   try {
+    const { id } = user;
     const { email } = user;
-    const token = jwt.sign({ email }, "dipesh78$", { expiresIn: "1d" });
+    const token = jwt.sign({ id }, "dipesh78$", { expiresIn: "1d" });
     console.log("Token is:", token);
     res.cookie("token", token, {
       httpOnly: true,
@@ -59,9 +60,9 @@ export const registerUser = async (
       },
     });
 
-    console.log("New user is",newUser);
+    console.log("New user is", newUser);
 
-    generateToken(res,newUser);
+    generateToken(res, newUser);
     res.status(201).json({ message: "User registered successfully" });
     return;
   } catch (error) {
@@ -95,16 +96,14 @@ export const loginUser = async (
     }
 
     const isPasswordValid = await bcrypt.compare(password, userExists.password);
-    console.log("Password is",isPasswordValid);
+    console.log("Password is", isPasswordValid);
 
     if (!isPasswordValid) {
       res.status(400).json({ message: "Invalid password" });
       return;
     }
 
-    console.log("Userexists after loggedin is",userExists);
-
-
+    console.log("Userexists after loggedin is", userExists);
 
     generateToken(res, userExists);
     res.status(200).json({ message: "User logged in successfully" });
@@ -121,6 +120,7 @@ export const logoutUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    console.log("Logout route called!");
     res.clearCookie("token");
     res.status(200).json({ message: "User logged out successfully" });
   } catch (error) {
@@ -135,18 +135,43 @@ export const updateUser = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  console.log("Update User is called!");
   try {
     const user = req.user;
+    if(!user)
+    {
+      res.status(401).json({message:'Unauthorized access'});
+      return;
+    }
 
+  
+    const { username, profilePic } = req.body;
+    if(!username || !profilePic)
+    {
+      res.status(400).json({message:"Invalid credentials"});
+      return;
+    }
+    console.log("User is:", user);
     if (!user) {
       res.status(401).json({ message: "Unauthorized access" });
       return;
     }
 
-    const { username, profilePic, email } = user;
+    const newUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        username: username,
+        profilePic: profilePic,
+      },
+      select:{
+        username:true,
+        profilePic:true
+      },
+    });
+    console.log("New updated user is:", newUser);
 
     // Add update logic if needed
-    res.status(200).json({ message: "User updated successfully" });
+    res.status(200).json({ message: "User updated successfully", newUser });
   } catch (error) {
     console.error("Error in updating user:", error);
     res.status(500).json({ message: "Internal server error" });

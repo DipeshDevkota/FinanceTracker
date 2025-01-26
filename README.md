@@ -11,3 +11,5 @@ export interface User {
     password: string;
     profilePic?: string | null; // Allows the field to be null
 }
+
+cookie-parser for reading cookies

@@ -19,11 +19,10 @@ export const authUser = async (
   try {
     console.log("AUthmiddleware called");
     console.log("Request is:",req);
-    const cookie = req.cookie;
+    const cookie = req?.cookies;
     console.log("Cookies is:", cookie);
     const token = req.cookies.token;
     console.log("Token is ", token); // Access the token from cookies
-    console.log("Token is:", token);
 
     if (!token) {
       res.status(401).json({ message: "Unauthorized access" });
@@ -35,16 +34,16 @@ export const authUser = async (
     console.log("Decoded token is:", decodedToken);
 
     // Extract `_id` from the decoded token
-    const { _id } = decodedToken as { _id: string };
+    const { id } = decodedToken as { id: string };
 
-    if (!_id) {
+    if (!id) {
       res.status(401).json({ message: "Unauthorized access" });
       return; // Ensure the function exits after response
     }
 
     // Find the user in the database by ID
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(_id, 10) },
+      where: { id: parseInt(id, 10) },
     });
     if (!user) {
       res.status(401).json({ message: "Unauthorized access" });
