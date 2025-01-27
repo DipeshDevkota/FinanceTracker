@@ -3,6 +3,7 @@ import { User } from "./../types/userType";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { UserSchema } from "../types/zodSchema";
 
 const prisma = new PrismaClient();
 
@@ -56,7 +57,10 @@ const verifyToken = async(
 export const registerUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   console.log("Register User called");
 
-  const { username, email, password } = req.body;
+
+  const validateData = UserSchema.parse(req.body)
+
+  const { username, email, password } = validateData
   if (!username || !email || !password) {
      res.status(400).json({ message: "Invalid credentials" });
      return ;

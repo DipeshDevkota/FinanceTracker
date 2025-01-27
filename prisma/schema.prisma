@@ -20,8 +20,8 @@ model User {
   id         Int      @id @default(autoincrement()) // Auto-incrementing ID
   profilePic String?  // Optional field (not required)
   password   String   @default("secret")
-  username   String  @unique
-  email      String   @unique
+  username   String  @unique @db.VarChar(50) // Username should be unique and have a max length of 50 characters
+  email      String   @unique @db.VarChar(255) // Email should be unique and have a max length of 255 characters
   posts      Post[]   // One-to-many relationship with posts
 }
 

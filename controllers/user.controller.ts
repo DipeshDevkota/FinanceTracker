@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
-import { parse } from "path";
 const prisma = new PrismaClient();
 
 export const getAllUsers = async (
@@ -11,7 +10,10 @@ export const getAllUsers = async (
   try {
     console.log("GETALLUSERS IS CALLED!");
 
-    const user = await prisma.user.findMany();
+    const user = await prisma.user.findMany({select:{
+      username:true,
+      profilePic:true,
+    }});
     console.log("User is", user);
     if (!user) {
       res.status(400).json({ message: "There are no users existing!" });
@@ -29,36 +31,34 @@ export const getUserById = async (
   next: NextFunction
 ) => {
   const { userId } = req.params;
-  console.log("User id from params is:",req.params)
- const type=  typeof(userId);
- console.log("Type of userId is",type);
- const userId= parseInt(userId);
-
-
-  console.log("GetuserById is called!");
-  if (!userId || isNaN(parseInt(userId))) {
-    res.status(400).json({ message: "Invalid user id" });
-    return;
-  }
+  console.log("User id from params is:", req.params);
+  const type = typeof userId;
+  console.log("Type of userId is", type);
 
   try {
-    console.log("Process for finding the user By Id called")
+    console.log("Process for finding the user By Id called");
     const user = await prisma.user.findUnique({
-        where: {
-          id: parseInt(userId),
-        },
-      });
-      console.log("User is:", user);
-    
-      if (!user) {
-        res.status(404).json({ message: "User with this id doesn't exist" });
-        return;
+      where: {
+      id: parseInt(userId),
+      },
+      select:{
+        username:true,
+        profilePic:true,
       }
-    
-      res.status(200).json({ message: "User with this id exists", user });
+    });
+    console.log("User is:", user);
+
+
+  
+    if (!user) {
+      res.status(404).json({ message: "User with this id doesn't exist" });
       return;
+    }
+
+    res.status(200).json({ message: "User with this id exists", user });
+    return;
   } catch (error) {
-    console.log("Server error while fetching user by Id",error)
+    console.log("Server error while fetching user by Id", error);
     res.status(500).json({ message: "Server error while fetching user by Id" });
   }
 };
