@@ -39,6 +39,19 @@ const generateToken = (res: Response, user: User, rememberMe?: boolean): void =>
   }
 };
 
+
+const verifyToken = async(
+  res:Response,
+  req:Request,
+  next:NextFunction
+)=>{
+  console.log("Verify token controller called!");
+  const token = req.cookies.token;
+  console.log("Token is:",token);
+  const validToken = jwt.verify(token,process.env.REFRESH_TOKEN as string)
+  console.log("Valid token is:",validToken);
+}
+
 // User Registration
 export const registerUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   console.log("Register User called");
@@ -148,3 +161,5 @@ export const recaptcha = async (req: Request, res: Response, next: NextFunction)
   console.log("Recaptcha called");
   res.status(200).json({ message: "Recaptcha validation completed" });
 };
+
+
