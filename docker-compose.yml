@@ -6,7 +6,7 @@ services:
     volumes:
       - ./data/db:/var/lib/postgresql/data
     ports:
-      - "5433:5432"  # Changed the host port to 5433
+      - "5433:5432"  # Host port 5433 maps to container port 5432
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
@@ -16,4 +16,13 @@ services:
     image: adminer
     restart: always
     ports:
-      - "8080:8080"
+      - "8080:8080"  # Host port 8080 maps to Adminer container's port 8080
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"  # Host port 6379 maps to container port 6379
+    volumes:
+      - ./data/redis:/data  # Persistent storage for Redis
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]  # Optional: Custom Redis config
