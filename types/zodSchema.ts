@@ -4,12 +4,12 @@ export const UserSchema = z.object({
   id: z.number(),
   username: z
     .string()
-    .max(10, "Username must not exceed 50 characters")
+    .max(50, "Username must not exceed 50 characters")  // Updated to 50
     .nullable(),
   email: z
     .string()
     .email("Email must be valid")
-    .max(15, "Email must not exceed 15 characters"),
+    .max(255, "Email must not exceed 255 characters"),  // Increased max length to 255 for emails
 
   password: z
     .string()
@@ -23,3 +23,17 @@ export const UserSchema = z.object({
 });
 
 export type UserValidationType = z.infer<typeof UserSchema>;
+
+export const TransactionSchema = z.object({
+  id: z.number().int().positive(),
+  price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+  quantity: z.number().int().positive(),
+  brand: z.string().min(1, "Brand must not be empty"),
+  dateOfManufacture: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date of manufacture must be in YYYY-MM-DD format"),
+  dateOfExpiry: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date of expiry must be in YYYY-MM-DD format"),
+  description: z.string().max(200, "Description must not exceed 200 characters!"), // Fixed message
+  TransactionPic: z.string().url("Transaction picture must be a valid URL"),  // Updated message
+  category: z.string().min(1, "Category must not be empty"),
+});
+
+export type TransactionValidationType = z.infer<typeof TransactionSchema>;
