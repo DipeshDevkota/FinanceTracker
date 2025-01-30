@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import axios from "axios";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 dotenv.config();
 
 const prisma = new PrismaClient();
+const genAI = new GoogleGenerativeAI(process.env.GEMINAI_API_KEY);
 
 export const addTransaction = async (
   req: Request,
@@ -25,8 +26,8 @@ export const addTransaction = async (
     } = req.body;
 
     if (!price || !quantity || !name || !brand || !Category) {
-      res.status(400).json({ message: "All fields are required!" });
-      return;
+       res.status(400).json({ message: "All fields are required!" });
+       return
     }
 
     const existingTransaction = await prisma.transaction.findFirst({
@@ -34,11 +35,11 @@ export const addTransaction = async (
     });
 
     if (existingTransaction) {
-      res.status(200).json({
+       res.status(200).json({
         message: "This transaction has already been recorded.",
         existingTransaction,
       });
-      return;
+      return
     }
 
     const newTransaction = await prisma.transaction.create({
@@ -55,15 +56,17 @@ export const addTransaction = async (
       },
     });
 
-    res.status(200).json({
+     res.status(200).json({
       message: "New transaction added successfully.",
       newTransaction,
     });
+    return
   } catch (error) {
     console.error("Error adding transaction:", error);
-    res
+     res
       .status(500)
       .json({ message: "Server error while creating transaction." });
+      return
   }
 };
 
@@ -73,45 +76,43 @@ export const categorizeTransaction = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    console.log("Key is", process.env.OPENAI_API);
-    const { name } = req.body;
+    const { name, description } = req.body;
 
     if (!name) {
-      res.status(400).json({ message: "Product name is required!" });
-      return;
+       res.status(400).json({ message: "Product name is required!" });
+       return
     }
 
+    const model = genAI.model("gemini-nano");
+
     const prompt = `
-      Categorize this transaction based on its details:
+      Categorize this product based on its details:
       Name: ${name || "N/A"}
+      Description: ${description || "N/A"}
 
-      Categories: Food, Electronics, Fashion, Healthcare, Others.
+      Categories: Food, Electronics, Fashion, Healthcare, Others.  Respond with ONLY the category name. Do not include any other text.
     `;
-    const response = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4",
-        messages: [{ role: "system", content: "Hello!" }],
-        max_tokens: 50,
-      },
 
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer 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`, // Replace with your key
-        },
-      }
-    );
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
 
-    const category = response.data.choices[0].message.content.trim();
-    res
-      .status(200)
-      .json({ message: "Transaction categorized successfully.", category });
+    const category = result.response.candidates[0].content.parts[0].text.trim();
+
+    const validCategories = ["Food", "Electronics", "Fashion", "Healthcare", "Others"];
+    if (!validCategories.includes(category)) {
+      console.warn(`Invalid category returned: ${category}`);
+       res.status(500).json({ message: "Could not categorize the product." });
+       return
+    }
+
+     res.status(200).json({ message: "Transaction categorized successfully.", category });
+     return
+
   } catch (error) {
     console.error("Error categorizing transaction:", error);
-    res
-      .status(500)
-      .json({ message: "Server error while categorizing transaction." });
+     res.status(500).json({ message: "Server error while categorizing transaction." });
+     return
   }
 };
 
@@ -120,11 +121,20 @@ export const allTransactions = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  console.log("AllTransactions route is  called!");
-  const allTransactions = await prisma.transaction.findMany();
-  console.log("Alltranactions are:",allTransactions)
-  res.status(200).json({message:"All transactions fetched successfully",allTransactions})
-  return;
+  try {
+    console.log("AllTransactions route is  called!");
+    const allTransactions = await prisma.transaction.findMany();
+    console.log("Alltransactions are:", allTransactions);
+     res.status(200).json({
+      message: "All transactions fetched successfully",
+      allTransactions,
+    });
+    return
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+     res.status(500).json({ message: "Server error while fetching transactions." });
+  }
+  return
 };
 
 export const deleteTransaction = async (
@@ -132,27 +142,34 @@ export const deleteTransaction = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  console.log("DeleteTransaction called!");
+  try {
+    console.log("DeleteTransaction called!");
 
-  const { id } = req.body;
+    const { id } = req.body;
 
-  if (!id) {
-    res.status(400).json({ message: "Fill the ceredentials!" });
+    if (!id) {
+       res.status(400).json({ message: "Transaction ID is required!" }); // More specific message
+       return
+    }
+
+    const existingTransaction = await prisma.transaction.findUnique({
+      where: { id },
+    });
+
+    if (!existingTransaction) {
+       res.status(404).json({ message: "Transaction with this ID doesn't exist" }); // More specific message
+       return
+    }
+
+    await prisma.transaction.delete({
+      where: { id },
+    });
+
+     res.status(200).json({ message: "Item deleted successfully!" });
+     return
+  } catch (error) {
+    console.error("Error deleting transaction:", error);
+     res.status(500).json({ message: "Server error while deleting transaction." });
+     return
   }
-  const existingTransaction = await prisma.transaction.findUnique({
-    where: { id },
-  });
-  console.log("Existing transaction is :", existingTransaction);
-
-  if (!existingTransaction) {
-    res.status(404).json({ message: "Transaction with this id doesn't exist" });
-    return;
-
-  }
-  await prisma.transaction.delete({
-    where: { id },
-  });
-
-  res.status(200).json({ message: "Item deleted successfully!" });
-  return;
 };
