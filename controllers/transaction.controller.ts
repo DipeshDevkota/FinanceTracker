@@ -5,7 +5,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const prisma = new PrismaClient();
-const genAI = new GoogleGenerativeAI(process.env.GEMINAI_API_KEY);
+const geminiApiKey = process.env.GEMINI_API_KEY;
+if (!geminiApiKey) {
+  throw new Error("GEMINI_API_KEY environment variable is not set");
+}
+
+const genAI = new GoogleGenerativeAI(geminiApiKey);
 
 export const addTransaction = async (
   req: Request,
@@ -76,19 +81,18 @@ export const categorizeTransaction = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { name, description } = req.body;
+    const { name } = req.body;
 
     if (!name) {
        res.status(400).json({ message: "Product name is required!" });
        return
     }
 
-    const model = genAI.model("gemini-nano");
+    const model = genAI.getGenerativeModel({model:"gemini-1.5-flash"})
 
     const prompt = `
       Categorize this product based on its details:
       Name: ${name || "N/A"}
-      Description: ${description || "N/A"}
 
       Categories: Food, Electronics, Fashion, Healthcare, Others.  Respond with ONLY the category name. Do not include any other text.
     `;
@@ -97,17 +101,13 @@ export const categorizeTransaction = async (
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
-    const category = result.response.candidates[0].content.parts[0].text.trim();
+    const response = await result.response;
+    console.log("Response is :",response);
+    const text= response.text();
+    console.log("Text is:",text)
 
-    const validCategories = ["Food", "Electronics", "Fashion", "Healthcare", "Others"];
-    if (!validCategories.includes(category)) {
-      console.warn(`Invalid category returned: ${category}`);
-       res.status(500).json({ message: "Could not categorize the product." });
-       return
-    }
-
-     res.status(200).json({ message: "Transaction categorized successfully.", category });
-     return
+    res.status(200).json({message:`${name} lies in ${text}`,text})
+    return;
 
   } catch (error) {
     console.error("Error categorizing transaction:", error);

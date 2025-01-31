@@ -10,3 +10,7 @@ export interface Transaction {
   TransactionPic: string | null;
   Category: string | null;
 }
+
+export interface GoogleGenerativeAI{
+  model:any
+}
