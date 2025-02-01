@@ -3,6 +3,7 @@ const app = express();
 import cookieParser from 'cookie-parser';
 import {userRouter} from './routes/user.routes'
 import {transactionRouter} from './routes/transaction.route'
+import { budgetRouter } from './routes/budget.route';
 const bodyParser= require('body-parser');
 
 require('dotenv').config();
@@ -11,6 +12,7 @@ app.use(cookieParser())
 
 app.use('/',userRouter);
 app.use('/',transactionRouter);
+app.use('/',budgetRouter)
 app.get('/',(req:any,res:any)=>{
  res.send('Hello World');
 });

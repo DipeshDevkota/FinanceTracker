@@ -54,18 +54,21 @@ export const TransactionSchema = z.object({
 });
 
 export type TransactionValidationType = z.infer<typeof TransactionSchema>;
-
 export const BudgetSchema = z.object({
-  id: z.number().int().positive(),
+  id: z.number().int().positive().optional(),
   budgetAllocation: z
-    .string()
-    .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+    .number()
+    .refine((val) => val >= 10, "Budget allocation must not be less than 10$")
+    .refine((val) => val <= 1000, "Budget allocation must not be more than 1000$"),
   budgetRemaining: z
     .string()
-    .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+    .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
+    .optional(),
   budgetAddition: z
     .string()
-    .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+    .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
+    .optional(),
 });
+
 
 export type BudgetValidationSchema = z.infer<typeof BudgetSchema>;

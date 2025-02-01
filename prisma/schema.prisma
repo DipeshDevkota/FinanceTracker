@@ -42,9 +42,9 @@ model Transaction {
 
 model Budget {
   id               Int           @id @default(autoincrement())
-  budgetAllocation String
-  budgetRemaining  String
-  budgetAddition   String
+  budgetAllocation Int?
+  budgetRemaining  Int?
+  budgetAddition   Int?
   transactions     Transaction[] // One-to-many relationship with transactions
 }
 

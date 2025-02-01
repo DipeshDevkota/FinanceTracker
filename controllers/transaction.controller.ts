@@ -28,6 +28,7 @@ export const addTransaction = async (
       description,
       TransactionPic,
       Category,
+      budgetId
     } = req.body;
 
     if (!price || !quantity || !name || !brand || !Category) {
@@ -58,6 +59,7 @@ export const addTransaction = async (
         description,
         TransactionPic,
         Category,
+        budgetId
       },
     });
 
