@@ -10,10 +10,12 @@ export const getAllUsers = async (
   try {
     console.log("GETALLUSERS IS CALLED!");
 
-    const user = await prisma.user.findMany({select:{
-      username:true,
-      profilePic:true,
-    }});
+    const user = await prisma.user.findMany({
+      select: {
+        username: true,
+        profilePic: true,
+      },
+    });
     console.log("User is", user);
     if (!user) {
       res.status(400).json({ message: "There are no users existing!" });
@@ -39,17 +41,15 @@ export const getUserById = async (
     console.log("Process for finding the user By Id called");
     const user = await prisma.user.findUnique({
       where: {
-      id: parseInt(userId),
+        id: parseInt(userId),
       },
-      select:{
-        username:true,
-        profilePic:true,
-      }
+      select: {
+        username: true,
+        profilePic: true,
+      },
     });
     console.log("User is:", user);
 
-
-  
     if (!user) {
       res.status(404).json({ message: "User with this id doesn't exist" });
       return;

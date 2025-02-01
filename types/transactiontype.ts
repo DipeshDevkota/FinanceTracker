@@ -9,7 +9,10 @@ export interface Transaction {
   description: string | null;
   TransactionPic: string | null;
   Category: string | null;
+  budgetId: number;
+
 }
+
 
 export interface GoogleGenerativeAI{
   model:any

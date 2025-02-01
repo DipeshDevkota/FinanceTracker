@@ -6,21 +6,23 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
 model Post {
-  id       Int      @id @default(autoincrement()) // Auto incrementing ID
-  title    String
-  content  String
+  id        Int      @id @default(autoincrement()) // Auto incrementing ID
+  title     String
+  content   String
   createdAt DateTime @default(now()) // Automatically set the creation timestamp
-  authorId Int      // Foreign key to User
-  author   User     @relation(fields: [authorId], references: [id]) // One-to-many relationship
+  authorId  Int // Foreign key to User
+  author    User     @relation(fields: [authorId], references: [id]) // One-to-many relationship
 }
+
 model User {
-  id         Int      @id @default(autoincrement()) // Auto-incrementing ID
-  profilePic String?  // Optional field (not required)
-  password   String   @default("secret")
+  id         Int     @id @default(autoincrement()) // Auto-incrementing ID
+  profilePic String? // Optional field (not required)
+  password   String  @default("secret")
   username   String  @unique
-  email      String   @unique
-  posts      Post[]   // One-to-many relationship with posts
+  email      String  @unique
+  posts      Post[] // One-to-many relationship with posts
 }
 
 model Transaction {
@@ -31,7 +33,18 @@ model Transaction {
   name              String
   dateOfManufacture String?
   dateOfExpiry      DateTime?
-  description       DateTime? 
+  description       DateTime?
   TransactionPic    String?
   Category          String
+  budgetId          Int // Foreign key to Budget
+  budget            Budget    @relation(fields: [budgetId], references: [id]) // Many-to-one relationship
 }
+
+model Budget {
+  id               Int           @id @default(autoincrement())
+  budgetAllocation String
+  budgetRemaining  String
+  budgetAddition   String
+  transactions     Transaction[] // One-to-many relationship with transactions
+}
+
