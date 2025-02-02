@@ -14,8 +14,8 @@ interface RequestWithUser extends Request {
 }
 
 
-const CACHE_KEY = 'dipesh78$';
-const CACHE_EXPIRATION =50;
+const CACHE_KEY = process.env.CACHE_KEY;
+const CACHE_EXPIRATION =process.env.CACHE_EXPIRATION;
 const generateToken = async (
   res: Response,
   user: User,
