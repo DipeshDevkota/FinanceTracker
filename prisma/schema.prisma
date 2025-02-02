@@ -48,9 +48,19 @@ model Budget {
   transactions     Transaction[] // One-to-many relationship with transactions
 }
 
+enum Category{
+  Food 
+  Electronics
+  Fashion
+  Healthcare
+  Others
+}
+
 model budgetAllocation {
   id               Int          @id @default(autoincrement())
   amount           String
+  category         Category
+  period           String
 }
 
 model budgetRemaining {
