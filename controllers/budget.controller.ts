@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
-import { BudgetSchema } from "../types/zodSchema";
+import { BudgetAllocationSchema, BudgetSchema } from "../types/zodSchema";
 const prisma = new PrismaClient();
 export const budgetAllocation = async (
     req: Request,
@@ -14,13 +14,13 @@ export const budgetAllocation = async (
         return;
       }
       
-    const validateData = BudgetSchema.parse(req.body);
+    const validateData = BudgetAllocationSchema.parse(req.body);
     if (!validateData) {
       res.status(404).json({ message: "Error in validating input" });
       return;
     }
   
-    const { budgetAllocation } = validateData;
+    const { amount } = validateData;
     const type = typeof(budgetAllocation);
     console.log("Type is:",type)
     if (!budgetAllocation) {
@@ -28,9 +28,9 @@ export const budgetAllocation = async (
       return;
     }
   
-    const newBudget = await prisma.budget.create({
+    const newBudget = await prisma.budgetAllocation.create({
       data: {
-        budgetAllocation
+        amount
       },
     });
   

@@ -69,6 +69,37 @@ export const BudgetSchema = z.object({
     .regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
     .optional(),
 });
-
-
 export type BudgetValidationSchema = z.infer<typeof BudgetSchema>;
+
+
+
+export const BudgetAllocationSchema = z.object({
+  id:z.number().int().positive(),
+  amount:z.string().
+  regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+})
+
+export type BudgetAllocationValidateSchema = z.infer<typeof BudgetAllocationSchema>;
+
+
+export const BudgetRemainingSchema = z.object({
+  id:z.number().int().positive(),
+  amount:z.string().
+  regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+})
+
+export type BudgetRemainingValidationSchema = z.infer<typeof BudgetRemainingSchema>;
+
+
+export const BudgetAdditionSchema = z.object({
+  id:z.number().int().positive(),
+  amount:z.string().
+  regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+})
+export type BudgetAdditionValidationSchema = z.infer<typeof BudgetAdditionSchema>;
+
+
+
+
+
+

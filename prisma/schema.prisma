@@ -48,3 +48,19 @@ model Budget {
   transactions     Transaction[] // One-to-many relationship with transactions
 }
 
+model budgetAllocation {
+  id               Int          @id @default(autoincrement())
+  amount           String
+}
+
+model budgetRemaining {
+  id              Int          @id @default(autoincrement())
+  amount          String
+}
+
+model budgetAddition {
+  id               Int           @id @default(autoincrement())
+  amount           String
+}
+
+
