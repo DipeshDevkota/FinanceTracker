@@ -1,4 +1,3 @@
-
 export interface Budget {
   id: number;
   budgetAllocation: number;
@@ -6,31 +5,30 @@ export interface Budget {
   budgetAddition: number;
 }
 
-
-export enum Category{
+export enum Category {
   Food = "Food",
-  Electronics= "Electronics",
+  Electronics = "Electronics",
   Fashion = "Fashion",
-  Healthcare="Healthcare",
-  Others= "Others",
+  Healthcare = "Healthcare",
+  Others = "Others",
 }
 
-export interface budgetAllocation{
+
+export interface budgetAllocation {
   id: number;
   amount: string | null;
-  category:Category;
+  category: string | null;
   notes: string;
   period: string | null;
+  name :string | null;
 }
 
-
-export interface budgetRemaining{
+export interface budgetRemaining {
   id: number;
   amount: string | null;
 }
 
-
-export interface budgetAddition{
+export interface budgetAddition {
   id: number;
   amount: string | null;
 }

@@ -57,10 +57,11 @@ enum Category{
 }
 
 model budgetAllocation {
-  id               Int          @id @default(autoincrement())
-  amount           String
-  category         Category
+  id               Int         @id @default(autoincrement())
+  amount           String      @default("$")
+  category         String
   period           String
+  notes            String
 }
 
 model budgetRemaining {

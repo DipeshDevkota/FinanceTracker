@@ -1,5 +1,4 @@
 import { z } from "zod";
-
 export const UserSchema = z.object({
   username: z
     .string()
@@ -74,9 +73,13 @@ export type BudgetValidationSchema = z.infer<typeof BudgetSchema>;
 
 
 export const BudgetAllocationSchema = z.object({
-  id:z.number().int().positive(),
+  id:z.number().int().positive().optional(),
+  name:z.string(),
   amount:z.string().
   regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+  notes:z.string(),
+  period:z.string(),
+  category:z.string().optional()//nativeEnum for allocating Enums
 })
 
 export type BudgetAllocationValidateSchema = z.infer<typeof BudgetAllocationSchema>;
