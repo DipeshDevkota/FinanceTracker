@@ -125,7 +125,20 @@ export const budgetAddition = async(
   where:{id:numericId}
  })
  
+
   const existingBudget = existingBudgetId?.amount === "1000$" ? existingBudgetId : null;
+
+  if(!existingBudget)
+  {
+    res.status(404).json({message:"You can't further exist the transaction"})
+  }
+///you have to check first before comparing the values
+  if(existingBudgetId && existingBudgetId?.amount < "1000$")
+  {
+    
+  }
+
+  //if the budget is less than 1000$ 
   console.log("Existing Budget is:", existingBudget);
  console.log("Existing Budget is:",existingBudget)
 
