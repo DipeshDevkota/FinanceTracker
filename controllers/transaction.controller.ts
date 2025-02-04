@@ -63,6 +63,9 @@ export const addTransaction = async (
       },
     });
 
+    ///when doing transaction if that goes to 1000$ of budgetAllocation. notification should be sent ? do you want to extend the budget???
+    //if yes . budgetaddidtioncontroller call
+
      res.status(200).json({
       message: "New transaction added successfully.",
       newTransaction,

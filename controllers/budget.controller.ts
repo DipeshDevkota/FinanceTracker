@@ -107,3 +107,36 @@ export const budgetAllocation = async (
     res.status(500).json({ message: "Server error while allocating budget." });
   }
 };
+
+
+
+export const budgetAddition = async(
+  req:Request,
+  res:Response,
+  next:NextFunction
+):Promise<void>=>{
+  console.log("budgetAddition Controller is called!")
+
+  const { id } = req.params;
+  const numericId = parseInt(id, 10);
+  console.log("Id is:", numericId);
+
+ const existingBudgetId =await prisma.budgetAllocation.findUnique({
+  where:{id:numericId}
+ })
+ 
+  const existingBudget = existingBudgetId?.amount === "1000$" ? existingBudgetId : null;
+  console.log("Existing Budget is:", existingBudget);
+ console.log("Existing Budget is:",existingBudget)
+
+
+  res.status(400).json({message:"Budget that has amount to 1000$ is:",existingBudget});
+  return;
+}
+
+
+//budgetAddition and budgetRemaining controllers to be made
+
+
+
+
