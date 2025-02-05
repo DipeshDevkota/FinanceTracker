@@ -67,12 +67,10 @@ export const budgetAllocation = async (
     // Validate request body using Zod
     const validateData = BudgetAllocationSchema.safeParse(req.body);
     if (!validateData.success) {
-      res
-        .status(400)
-        .json({
-          message: "Invalid input data",
-          errors: validateData.error.errors,
-        });
+      res.status(400).json({
+        message: "Invalid input data",
+        errors: validateData.error.errors,
+      });
       return;
     }
 
@@ -85,8 +83,7 @@ export const budgetAllocation = async (
         .json({ message: "Product name is required for categorization!" });
       return;
     }
-    const currencysymbol = "$";
-    const validamount = `${amount}${currencysymbol}`;
+ 
 
     // Get category from Gemini API
     const category = await categorizeTransaction(req, res, next);
@@ -100,7 +97,7 @@ export const budgetAllocation = async (
     // Store budget allocation in the database
     const newBudget = await prisma.budgetAllocation.create({
       data: {
-        amount: validamount,
+        amount: amount,
         category,
         notes,
         period,
@@ -131,30 +128,55 @@ export const budgetAddition = async (
   const existingBudgetId = await prisma.budgetAllocation.findUnique({
     where: { id: numericId },
   });
-  console.log("ExistingBudgetId is:",existingBudgetId)
-  const existingBudgetAmount = existingBudgetId?.amount
-  if(existingBudgetId && existingBudgetAmount === "1000")
-  {
-    console.log("Amount that has 1000$ is",existingBudgetAmount)
+  console.log("ExistingBudgetId is:", existingBudgetId);
+  const existingBudgetAmount = existingBudgetId?.amount;
+  console.log("ExistingBudgetIdAMount is:", existingBudgetAmount);
+  if (existingBudgetId && existingBudgetAmount === "1000") {
+    console.log("Amount that has 1000$ is", existingBudgetAmount);
 
-     res.status(400).json({message:"Existing budgetamount is",existingBudgetAmount})
-     return;
-
-  }
-  const { amount } = req.body;
-
-
-  ///you have to check first before comparing the values
-  if (existingBudgetId && existingBudgetId?.amount < "1000$") {
-    const additionBudget = await prisma.budgetAddition.create({
-      data: {
-        amount,
-      },
-    });
-    console.log("AdditionBudget is:", additionBudget);
-    res.status(400).json({ message: "AdditionBudget is:", additionBudget });
+    res
+      .status(400)
+      .json({ message: "Existing budgetamount is", existingBudgetAmount });
     return;
   }
+  console.log("It is getting called called!");
+
+  if (!(existingBudgetId && existingBudgetAmount == "1000")) {
+    res
+      .status(404)
+      .json({ message: " Budget with amount 1000$ doesn't exist" });
+  }
+  const { amount } = req.body;
+  console.log("Amount of req.body is:", amount);
+
+  ///you have to check first before comparing the values
+  try {
+    const amountt =existingBudgetId?.amount;
+    const existingBudgetIdd = existingBudgetId?.id
+    console.log("It is getting called againnnn");
+    console.log("ExistingBudgetId is",existingBudgetIdd)
+    console.log("ExistingBudgetId is",existingBudgetId)
+
+    console.log("ExistingBudgetAMount is",amountt)
+     const typeofAmount = typeof(amountt);
+     console.log("Type of amount is:",typeofAmount)
+
+    if (existingBudgetId?.id && Number(existingBudgetId?.amount) < 1000) {
+      console.log("Inside is getting called");
+      const additionBudget = await prisma.budgetAddition.create({
+        data: {
+          amount:amount,
+        },
+      });
+      console.log("AdditionBudget is:", additionBudget);
+      res.status(400).json({ message: "AdditionBudget is:", additionBudget });
+      return;
+    }
+  } catch (error) {
+    console.log("Error is:",error)
+    
+  }
+
 };
 
 //budgetAddition and budgetRemaining controllers to be made
