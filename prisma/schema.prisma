@@ -62,6 +62,7 @@ model budgetAllocation {
   category         String
   period           String
   notes            String
+  budgetAdditions  budgetAddition[]
 }
 
 model budgetRemaining {
@@ -69,9 +70,12 @@ model budgetRemaining {
   amount          String
 }
 
+
 model budgetAddition {
-  id               Int           @id @default(autoincrement())
-  amount           String
+  id                  Int                  @id @default(autoincrement())
+  amount              String
+  budgetAllocationId  Int?  // Make it optional first
+  budgetAllocation    budgetAllocation? @relation(fields: [budgetAllocationId], references: [id])
 }
 
 

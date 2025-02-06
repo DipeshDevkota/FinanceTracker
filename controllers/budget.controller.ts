@@ -83,7 +83,6 @@ export const budgetAllocation = async (
         .json({ message: "Product name is required for categorization!" });
       return;
     }
- 
 
     // Get category from Gemini API
     const category = await categorizeTransaction(req, res, next);
@@ -114,69 +113,106 @@ export const budgetAllocation = async (
   }
 };
 
-export const budgetAddition = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  console.log("budgetAddition Controller is called!");
-
-  const { id } = req.params;
-  const numericId = parseInt(id, 10);
-  console.log("Id is:", numericId);
-
-  const existingBudgetId = await prisma.budgetAllocation.findUnique({
-    where: { id: numericId },
-  });
-  console.log("ExistingBudgetId is:", existingBudgetId);
-  const existingBudgetAmount = existingBudgetId?.amount;
-  console.log("ExistingBudgetIdAMount is:", existingBudgetAmount);
-  if (existingBudgetId && existingBudgetAmount === "1000") {
-    console.log("Amount that has 1000$ is", existingBudgetAmount);
-
-    res
-      .status(400)
-      .json({ message: "Existing budgetamount is", existingBudgetAmount });
-    return;
-  }
-  console.log("It is getting called called!");
-
-  if (!(existingBudgetId && existingBudgetAmount == "1000")) {
-    res
-      .status(404)
-      .json({ message: " Budget with amount 1000$ doesn't exist" });
-  }
-  const { amount } = req.body;
-  console.log("Amount of req.body is:", amount);
-
-  ///you have to check first before comparing the values
+export const budgetAddition = async(
+  req:Request,
+  res:Response,
+  next:NextFunction
+):Promise<void> =>{
+  const {id} = req.params;
+  const numericId = parseInt(id,10);
+  const {amount} = req.body;
   try {
-    const amountt =existingBudgetId?.amount;
-    const existingBudgetIdd = existingBudgetId?.id
-    console.log("It is getting called againnnn");
-    console.log("ExistingBudgetId is",existingBudgetIdd)
-    console.log("ExistingBudgetId is",existingBudgetId)
 
-    console.log("ExistingBudgetAMount is",amountt)
-     const typeofAmount = typeof(amountt);
-     console.log("Type of amount is:",typeofAmount)
+    const budgetAllocation = await prisma.budgetAllocation.findUnique({
+      where:{id:numericId}
+    });
+    if(!budgetAllocation)
+    {
+       res.status(404).json({message:"Budget allocation not found!"})
+       return;
+    }
 
-    if (existingBudgetId?.id && Number(existingBudgetId?.amount) < 1000) {
-      console.log("Inside is getting called");
-      const additionBudget = await prisma.budgetAddition.create({
-        data: {
-          amount:amount,
-        },
-      });
-      console.log("AdditionBudget is:", additionBudget);
-      res.status(400).json({ message: "AdditionBudget is:", additionBudget });
+
+    const amountNumber = Number(budgetAllocation?.amount);
+
+    if(amountNumber === 1000)
+    {
+      res.status(400).json({message:"Budget amount is 1000$. "})
       return;
     }
+
+    if(amountNumber <1000)
+    {
+      const budgetAddition = await prisma.budgetAddition.create({
+        data:{
+          amount:amount,
+          budgetAllocation:{
+            connect:{id: numericId},
+          }
+
+        }
+      });
+      res.status(200).json({message:"Budget updated successfully!",budgetAddition})
+      return;
+    
+    }
+
+    else{
+      res.status(400).json({ message: "Budget amount exceeds limit." })
+      return;
+
+    }
   } catch (error) {
-    console.log("Error is:",error)
+    console.error("Error in budgetAddition:", error);
+    res.status(500).json({ message: "Internal server error" });
+    return
     
   }
-
+}
+export const viewBudget = async (req:Request,res:Response,next:NextFunction) => {
+  try {
+    console.log("ViewBudgetController is called!");
+    const viewBudget= await prisma.budgetAllocation.findMany();
+    console.log("All of the budget controllers are:",viewBudget);
+    res.status(200).json({message:"All of the budgets allocated are:",viewBudget})
+    return;
+  } catch (error) {
+    console.error("Error in budgetAddition:", error);
+    res.status(500).json({ message: "Internal server error" });
+    return;
+  }
 };
 
+export const viewBudgetById = async(req:Request, res:Response, next:NextFunction)=>{
+  try {
+    console.log("ViewBudget Controller is called!");
+    const {id} = req.params;
+    const numericId= Number(id)
+    if(!id)
+    {
+      res.status(404).json({message:"Error in fetching single budget"});
+      return;
+    }
+    const existingBudgetId= await prisma.budgetAllocation.findUnique({
+      where:{id:numericId}
+    });
+
+    console.log("Existing Budgetid is:",existingBudgetId);
+    if(!existingBudgetId)
+    {
+      res.status(404).json({message:"Budget doesn't exist on the database"});
+      return;
+    }
+
+
+    res.status(200).json({message:"Budget with the id is available on the database",existingBudgetId})
+    return;
+  } catch (error) {
+    console.error("Error in budgetAddition:", error);
+    res.status(500).json({ message: "Internal server error" });
+    return;
+
+    
+  }
+}
 //budgetAddition and budgetRemaining controllers to be made
