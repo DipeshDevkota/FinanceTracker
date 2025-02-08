@@ -113,68 +113,65 @@ export const budgetAllocation = async (
   }
 };
 
-export const budgetAddition = async(
-  req:Request,
-  res:Response,
-  next:NextFunction
-):Promise<void> =>{
-  const {id} = req.params;
-  const numericId = parseInt(id,10);
-  const {amount} = req.body;
+export const budgetAddition = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const { id } = req.params;
+  const numericId = parseInt(id, 10);
+  const { amount } = req.body;
   try {
-
     const budgetAllocation = await prisma.budgetAllocation.findUnique({
-      where:{id:numericId}
+      where: { id: numericId },
     });
-    if(!budgetAllocation)
-    {
-       res.status(404).json({message:"Budget allocation not found!"})
-       return;
+    if (!budgetAllocation) {
+      res.status(404).json({ message: "Budget allocation not found!" });
+      return;
     }
-
 
     const amountNumber = Number(budgetAllocation?.amount);
 
-    if(amountNumber === 1000)
-    {
-      res.status(400).json({message:"Budget amount is 1000$. "})
+    if (amountNumber === 1000) {
+      res.status(400).json({ message: "Budget amount is 1000$. " });
       return;
     }
 
-    if(amountNumber <1000)
-    {
+    if (amountNumber < 1000) {
       const budgetAddition = await prisma.budgetAddition.create({
-        data:{
-          amount:amount,
-          budgetAllocation:{
-            connect:{id: numericId},
-          }
-
-        }
+        data: {
+          amount: amount,
+          budgetAllocation: {
+            connect: { id: numericId },
+          },
+        },
       });
-      res.status(200).json({message:"Budget updated successfully!",budgetAddition})
+      res
+        .status(200)
+        .json({ message: "Budget updated successfully!", budgetAddition });
       return;
-    
-    }
-
-    else{
-      res.status(400).json({ message: "Budget amount exceeds limit." })
+    } else {
+      res.status(400).json({ message: "Budget amount exceeds limit." });
       return;
-
     }
   } catch (error) {
     console.error("Error in budgetAddition:", error);
     res.status(500).json({ message: "Internal server error" });
-    return
-    
+    return;
   }
-}
-export const viewBudget = async (req:Request,res:Response,next:NextFunction) => {
+};
+export const viewBudget = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     console.log("ViewBudgetController is called!");
-    const viewBudget= await prisma.budgetAllocation.findMany();
-    console.log("All of the budget controllers are:",viewBudget);
-    res.status(200).json({message:"All of the budgets allocated are:",viewBudget})
+    const viewBudget = await prisma.budgetAllocation.findMany();
+    console.log("All of the budget controllers are:", viewBudget);
+    res
+      .status(200)
+      .json({ message: "All of the budgets allocated are:", viewBudget });
     return;
   } catch (error) {
     console.error("Error in budgetAddition:", error);
@@ -183,36 +180,40 @@ export const viewBudget = async (req:Request,res:Response,next:NextFunction) => 
   }
 };
 
-export const viewBudgetById = async(req:Request, res:Response, next:NextFunction)=>{
+export const viewBudgetById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     console.log("ViewBudget Controller is called!");
-    const {id} = req.params;
-    const numericId= Number(id)
-    if(!id)
-    {
-      res.status(404).json({message:"Error in fetching single budget"});
+    const { id } = req.params;
+    const numericId = Number(id);
+    if (!id) {
+      res.status(404).json({ message: "Error in fetching single budget" });
       return;
     }
-    const existingBudgetId= await prisma.budgetAllocation.findUnique({
-      where:{id:numericId}
+    const existingBudgetId = await prisma.budgetAllocation.findUnique({
+      where: { id: numericId },
     });
 
-    console.log("Existing Budgetid is:",existingBudgetId);
-    if(!existingBudgetId)
-    {
-      res.status(404).json({message:"Budget doesn't exist on the database"});
+    console.log("Existing Budgetid is:", existingBudgetId);
+    if (!existingBudgetId) {
+      res.status(404).json({ message: "Budget doesn't exist on the database" });
       return;
     }
 
-
-    res.status(200).json({message:"Budget with the id is available on the database",existingBudgetId})
+    res
+      .status(200)
+      .json({
+        message: "Budget with the id is available on the database",
+        existingBudgetId,
+      });
     return;
   } catch (error) {
     console.error("Error in budgetAddition:", error);
     res.status(500).json({ message: "Internal server error" });
     return;
-
-    
   }
-}
+};
 //budgetAddition and budgetRemaining controllers to be made
