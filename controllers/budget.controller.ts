@@ -130,30 +130,47 @@ export const budgetAddition = async (
       return;
     }
 
-    const amountNumber = Number(budgetAllocation?.amount);
+    const totalAdditions = await prisma.budgetAddition.aggregate({
+      where: { budgetAllocationId: numericId },
+      _sum: { amount: true },
+    });
 
-    if (amountNumber === 1000) {
-      res.status(400).json({ message: "Budget amount is 1000$. " });
-      return;
-    }
+    const currentTotal =
+      budgetAllocation.amount + (totalAdditions._sum.amount || 0);
+    const projectedTotal = currentTotal + amount;
 
-    if (amountNumber < 1000) {
-      const budgetAddition = await prisma.budgetAddition.create({
-        data: {
-          amount: amount,
-          budgetAllocation: {
-            connect: { id: numericId },
-          },
-        },
+    if (projectedTotal > 1000) {
+      res.status(400).json({
+        message: `Budget `,
       });
-      res
-        .status(200)
-        .json({ message: "Budget updated successfully!", budgetAddition });
-      return;
-    } else {
-      res.status(400).json({ message: "Budget amount exceeds limit." });
+    }
+    // Check if the new addition would exceed the limit
+    if (projectedTotal > 1000) {
+      res.status(400).json({
+        message: `Budget would exceed limit. Current total: $${currentTotal}, Attempting to add: $${amountNumber}`,
+      });
       return;
     }
+
+    //Create the new budget addition
+    const newAddition = await prisma.budgetAddition.create({
+      data: {
+        amount: amount,
+        budgetAllocation: {
+          connect: { id: numericId },
+        },
+      },
+    });
+
+    const responseMessage =
+      projectedTotal === 1000
+        ? "Budget reached the maximum limit of $1000!"
+        : "Budget updated successfully!";
+    res.status(200).json({
+      message: responseMessage,
+      budgetAddition: newAddition,
+    });
+
   } catch (error) {
     console.error("Error in budgetAddition:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -203,12 +220,10 @@ export const viewBudgetById = async (
       return;
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Budget with the id is available on the database",
-        existingBudgetId,
-      });
+    res.status(200).json({
+      message: "Budget with the id is available on the database",
+      existingBudgetId,
+    });
     return;
   } catch (error) {
     console.error("Error in budgetAddition:", error);

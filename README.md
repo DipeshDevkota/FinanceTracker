@@ -72,3 +72,6 @@ export const budgetAddition = async (
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+if possibly null then 0

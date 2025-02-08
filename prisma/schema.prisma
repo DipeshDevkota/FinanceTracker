@@ -58,7 +58,7 @@ enum Category{
 
 model budgetAllocation {
   id               Int         @id @default(autoincrement())
-  amount           String      @default("$")
+  amount           Float    
   category         String
   period           String
   notes            String
@@ -67,13 +67,13 @@ model budgetAllocation {
 
 model budgetRemaining {
   id              Int          @id @default(autoincrement())
-  amount          String
+  amount          Float
 }
 
 
 model budgetAddition {
   id                  Int                  @id @default(autoincrement())
-  amount              String
+  amount              Float
   budgetAllocationId  Int?  // Make it optional first
   budgetAllocation    budgetAllocation? @relation(fields: [budgetAllocationId], references: [id])
 }
