@@ -16,7 +16,7 @@ export enum Category {
 
 export interface budgetAllocation {
   id: number;
-  amount: string | null;
+  amount:number;
   category: string | null;
   notes: string;
   period: string | null;
@@ -25,10 +25,10 @@ export interface budgetAllocation {
 
 export interface budgetRemaining {
   id: number;
-  amount: string | null;
+  amount:number;
 }
 
 export interface budgetAddition {
   id: number;
-  amount: string | null;
+  amount:number;
 }

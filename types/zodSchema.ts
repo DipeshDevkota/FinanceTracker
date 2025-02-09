@@ -75,8 +75,7 @@ export type BudgetValidationSchema = z.infer<typeof BudgetSchema>;
 export const BudgetAllocationSchema = z.object({
   id:z.number().int().positive().optional(),
   name:z.string(),
-  amount:z.string().
-  regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+  amount:z.number(),
   notes:z.string(),
   period:z.string(),
   category:z.string().optional()//nativeEnum for allocating Enums
@@ -87,8 +86,8 @@ export type BudgetAllocationValidateSchema = z.infer<typeof BudgetAllocationSche
 
 export const BudgetRemainingSchema = z.object({
   id:z.number().int().positive(),
-  amount:z.string().
-  regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+  amount:z.number(),
+
 })
 
 export type BudgetRemainingValidationSchema = z.infer<typeof BudgetRemainingSchema>;
@@ -96,8 +95,8 @@ export type BudgetRemainingValidationSchema = z.infer<typeof BudgetRemainingSche
 
 export const BudgetAdditionSchema = z.object({
   id:z.number().int().positive(),
-  amount:z.string().
-  regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid number"),
+  amount:z.number(),
+
 })
 export type BudgetAdditionValidationSchema = z.infer<typeof BudgetAdditionSchema>;
 

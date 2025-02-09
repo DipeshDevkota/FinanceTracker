@@ -64,6 +64,8 @@ export const budgetAllocation = async (
       return;
     }
 
+    console.log("Req.body is:", req.body);
+
     // Validate request body using Zod
     const validateData = BudgetAllocationSchema.safeParse(req.body);
     if (!validateData.success) {
@@ -76,40 +78,51 @@ export const budgetAllocation = async (
 
     const { amount, notes, period, name } = validateData.data; // Extract fields
 
-    // Ensure `name` exists for category detection
     if (!name) {
-      res
-        .status(400)
-        .json({ message: "Product name is required for categorization!" });
+      res.status(400).json({ message: "Product name is required for categorization!" });
       return;
     }
 
     // Get category from Gemini API
     const category = await categorizeTransaction(req, res, next);
+    console.log("Received category:", category);
 
-    console.log("Categorized item in budgetAllocation", category);
     if (!category) {
       res.status(500).json({ message: "Failed to categorize transaction" });
       return;
     }
 
+    // Sanitize input data (Remove null characters)
+    function sanitizeString(str: string | null | undefined): string {
+      return str ? str.replace(/\x00/g, '') : '';
+    }
+
+    const sanitizedCategory = sanitizeString(category);
+    const sanitizedNotes = sanitizeString(notes);
+    const sanitizedPeriod = sanitizeString(period);
+
+    console.log("Sanitized category:", sanitizedCategory);
+    console.log("Sanitized notes:", sanitizedNotes);
+    console.log("Sanitized period:", sanitizedPeriod);
+
     // Store budget allocation in the database
     const newBudget = await prisma.budgetAllocation.create({
       data: {
-        amount: amount,
-        category,
-        notes,
-        period,
+        amount,
+        category: sanitizedCategory,
+        notes: sanitizedNotes,
+        period: sanitizedPeriod,
       },
     });
-    console.log("NewBudget is :", newBudget);
 
-    res
-      .status(201)
-      .json({ message: "Budget allocated successfully!", newBudget });
+    console.log("NewBudget is:", newBudget);
+
+    res.status(201).json({ message: "Budget allocated successfully!", newBudget });
+    return;
   } catch (error) {
     console.error("Error in budgetAllocation:", error);
-    res.status(500).json({ message: "Server error while allocating budget." });
+    res.status(500).json({ message: "Server error while allocating budget.", error });
+    return;
   }
 };
 
@@ -139,15 +152,10 @@ export const budgetAddition = async (
       budgetAllocation.amount + (totalAdditions._sum.amount || 0);
     const projectedTotal = currentTotal + amount;
 
-    if (projectedTotal > 1000) {
-      res.status(400).json({
-        message: `Budget `,
-      });
-    }
     // Check if the new addition would exceed the limit
     if (projectedTotal > 1000) {
       res.status(400).json({
-        message: `Budget would exceed limit. Current total: $${currentTotal}, Attempting to add: $${amountNumber}`,
+        message: `Budget would exceed limit. Current total: $${currentTotal}, Attempting to add: $${amount}`,
       });
       return;
     }
@@ -170,7 +178,6 @@ export const budgetAddition = async (
       message: responseMessage,
       budgetAddition: newAddition,
     });
-
   } catch (error) {
     console.error("Error in budgetAddition:", error);
     res.status(500).json({ message: "Internal server error" });

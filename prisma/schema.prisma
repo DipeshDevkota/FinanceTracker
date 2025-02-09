@@ -61,7 +61,7 @@ model budgetAllocation {
   amount           Float    
   category         String
   period           String
-  notes            String
+  notes            String?
   budgetAdditions  budgetAddition[]
 }
 
