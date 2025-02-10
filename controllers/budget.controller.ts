@@ -79,7 +79,9 @@ export const budgetAllocation = async (
     const { amount, notes, period, name } = validateData.data; // Extract fields
 
     if (!name) {
-      res.status(400).json({ message: "Product name is required for categorization!" });
+      res
+        .status(400)
+        .json({ message: "Product name is required for categorization!" });
       return;
     }
 
@@ -94,7 +96,7 @@ export const budgetAllocation = async (
 
     // Sanitize input data (Remove null characters)
     function sanitizeString(str: string | null | undefined): string {
-      return str ? str.replace(/\x00/g, '') : '';
+      return str ? str.replace(/\x00/g, "") : "";
     }
 
     const sanitizedCategory = sanitizeString(category);
@@ -117,11 +119,15 @@ export const budgetAllocation = async (
 
     console.log("NewBudget is:", newBudget);
 
-    res.status(201).json({ message: "Budget allocated successfully!", newBudget });
+    res
+      .status(201)
+      .json({ message: "Budget allocated successfully!", newBudget });
     return;
   } catch (error) {
     console.error("Error in budgetAllocation:", error);
-    res.status(500).json({ message: "Server error while allocating budget.", error });
+    res
+      .status(500)
+      .json({ message: "Server error while allocating budget.", error });
     return;
   }
 };
@@ -142,7 +148,11 @@ export const budgetAddition = async (
       res.status(404).json({ message: "Budget allocation not found!" });
       return;
     }
+    const amountInNumber = Number(amount);
 
+    console.log("Amount in NUmber");
+    const typeofAmount = typeof amountInNumber;
+    console.log("Type of amount is:", typeofAmount);
     const totalAdditions = await prisma.budgetAddition.aggregate({
       where: { budgetAllocationId: numericId },
       _sum: { amount: true },
@@ -150,7 +160,20 @@ export const budgetAddition = async (
 
     const currentTotal =
       budgetAllocation.amount + (totalAdditions._sum.amount || 0);
+
+      console.log("BudgetAllocationAMount is:",budgetAllocation.amount)
+      console.log("BudgetAllocationAMount is:",totalAdditions._sum.amount)
+
+    console.log("Current Total is:", currentTotal);
     const projectedTotal = currentTotal + amount;
+    console.log("Projected Total is:", projectedTotal);
+
+    const updatedAllocation = await prisma.budgetAllocation.update({
+      where: { id: budgetAllocation.id },
+      data: { amount: projectedTotal },
+    });
+
+    console.log("Updated Alocation is:", updatedAllocation);
 
     // Check if the new addition would exceed the limit
     if (projectedTotal > 1000) {

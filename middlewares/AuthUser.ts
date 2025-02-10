@@ -18,7 +18,6 @@ export const authUser = async (
   // Ensuring that the return type is `void`
   try {
     console.log("AUthmiddleware called");
-    console.log("Request is:",req);
     const cookie = req?.cookies;
     console.log("Cookies is:", cookie);
     const token = req.cookies.token;
