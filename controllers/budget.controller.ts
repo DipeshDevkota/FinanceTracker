@@ -162,7 +162,7 @@ export const budgetAddition = async (
       budgetAllocation.amount + (totalAdditions._sum.amount || 0);
 
       console.log("BudgetAllocationAMount is:",budgetAllocation.amount)
-      console.log("BudgetAllocationAMount is:",totalAdditions._sum.amount)
+      console.log("TotalAdditionsAMount is:",totalAdditions._sum.amount)
 
     console.log("Current Total is:", currentTotal);
     const projectedTotal = currentTotal + amount;
@@ -184,14 +184,14 @@ export const budgetAddition = async (
     }
 
     //Create the new budget addition
-    const newAddition = await prisma.budgetAddition.create({
-      data: {
-        amount: amount,
-        budgetAllocation: {
-          connect: { id: numericId },
-        },
-      },
-    });
+    // const newAddition = await prisma.budgetAddition.create({
+    //   data: {
+    //     amount: amount,
+    //     budgetAllocation: {
+    //       connect: { id: numericId },
+    //     },
+    //   },
+    // });
 
     const responseMessage =
       projectedTotal === 1000
@@ -199,7 +199,7 @@ export const budgetAddition = async (
         : "Budget updated successfully!";
     res.status(200).json({
       message: responseMessage,
-      budgetAddition: newAddition,
+      budgetAddition,
     });
   } catch (error) {
     console.error("Error in budgetAddition:", error);
