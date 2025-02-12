@@ -1,5 +1,9 @@
 npx prisma migrate dev --name init
 npx prisma studio
+dipesh@dipesh-Inspiron-3501:~/Desktop/summarizevideoai$ sudo chown $USER:$USER data/redis/dump.rdb
+[sudo] password for dipesh: 
+dipesh@dipesh-Inspiron-3501:~/Desktop/summarizevideoai$ sudo chmod u+rw data/redis/dump.rdb
+dipesh@dipesh-Inspiron-3501:~/Desktop/summarizevideoai$ 
 
 export const budgetAddition = async (
   req: Request,

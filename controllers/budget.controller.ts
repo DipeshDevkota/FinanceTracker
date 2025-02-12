@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import { BudgetAllocationSchema, BudgetSchema } from "../types/zodSchema";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-
+import { User } from '../types/userType'
 const prisma = new PrismaClient();
 
 const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -11,6 +11,11 @@ if (!geminiApiKey) {
 }
 
 const genAI = new GoogleGenerativeAI(geminiApiKey);
+
+interface RequestWithUser extends Request{
+  user?:User
+
+}
 
 export const categorizeTransaction = async (
   req: Request,
@@ -178,7 +183,7 @@ export const budgetAddition = async (
     // Check if the new addition would exceed the limit
     if (projectedTotal > 1000) {
       res.status(400).json({
-        message: `Budget would exceed limit. Current total: $${currentTotal}, Attempting to add: $${amount}`,
+        message: `Budget would exceed limit. Current total: $${currentTotal}, Attempting to add: $${amount}`,projectedTotal
       });
       return;
     }
@@ -199,7 +204,7 @@ export const budgetAddition = async (
         : "Budget updated successfully!";
     res.status(200).json({
       message: responseMessage,
-      budgetAddition,
+      projectedTotal,
     });
   } catch (error) {
     console.error("Error in budgetAddition:", error);
@@ -227,6 +232,43 @@ export const viewBudget = async (
   }
 };
 
+export const budgetDeleteById = async(
+  req:RequestWithUser,
+  res:Response,
+  next:NextFunction
+)=>{
+  try {
+    console.log("Deleting the budget controller is called!")
+    const {id} = req.params;
+    const numericId= Number(id);
+
+    const user = req.user;
+    if(!user)
+    {
+      res.status(404).json({message:"User is not authenticated"})
+      return;
+    }
+
+    const existingBudgetId= await prisma.budgetAllocation.findUnique({
+      where:{id: numericId}
+    });
+
+    if(!existingBudgetId)
+    {
+      res.status(404).json({message:"Budgetwith this Id doesn't exist!"})
+      return;
+    }
+
+    const budgetwithUser = await prisma.user.
+
+
+
+
+    
+  } catch (error) {
+    
+  }
+}
 export const viewBudgetById = async (
   req: Request,
   res: Response,
