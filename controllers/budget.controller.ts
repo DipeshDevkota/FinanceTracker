@@ -113,20 +113,20 @@ export const budgetAllocation = async (
     console.log("Sanitized period:", sanitizedPeriod);
 
     // Store budget allocation in the database
-    const newBudget = await prisma.budgetAllocation.create({
-      data: {
-        amount,
-        category: sanitizedCategory,
-        notes: sanitizedNotes,
-        period: sanitizedPeriod,
-      },
-    });
+    // const newBudget = await prisma.budgetAllocation.create({
+    //   data: {
+    //     amount,
+    //     category: sanitizedCategory,
+    //     notes: sanitizedNotes,
+    //     period: sanitizedPeriod,
+    //   },
+    // });
 
-    console.log("NewBudget is:", newBudget);
+    // console.log("NewBudget is:", newBudget);
 
     res
       .status(201)
-      .json({ message: "Budget allocated successfully!", newBudget });
+      .json({ message: "Budget allocated successfully!" });
     return;
   } catch (error) {
     console.error("Error in budgetAllocation:", error);
@@ -237,37 +237,38 @@ export const budgetDeleteById = async(
   res:Response,
   next:NextFunction
 )=>{
-  try {
-    console.log("Deleting the budget controller is called!")
-    const {id} = req.params;
-    const numericId= Number(id);
+  // try {
+  //   console.log("Deleting the budget controller is called!")
+  //   const {id} = req.params;
+  //   const numericId= Number(id);
 
-    const user = req.user;
-    if(!user)
-    {
-      res.status(404).json({message:"User is not authenticated"})
-      return;
-    }
+  //   const user = req.user;
+  //   const userId = user?.id
+  //   if(!userId)
+  //   {
+  //     res.status(404).json({message:"User is not authenticated"})
+  //     return;
+  //   }
 
-    const existingBudgetId= await prisma.budgetAllocation.findUnique({
-      where:{id: numericId}
-    });
+  //   const existingBudgetId= await prisma.budgetAllocation.findUnique({
+  //     where:{id: numericId}
+  //   });
 
-    if(!existingBudgetId)
-    {
-      res.status(404).json({message:"Budgetwith this Id doesn't exist!"})
-      return;
-    }
+  //   if(!existingBudgetId)
+  //   {
+  //     res.status(404).json({message:"Budgetwith this Id doesn't exist!"})
+  //     return;
+  //   }
 
-    const budgetwithUser = await prisma.user.
+
 
 
 
 
     
-  } catch (error) {
+  // } catch (error) {
     
-  }
+  // }
 }
 export const viewBudgetById = async (
   req: Request,

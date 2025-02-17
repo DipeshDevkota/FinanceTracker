@@ -17,38 +17,39 @@ model Post {
 }
 
 model User {
-  id         Int     @id @default(autoincrement()) // Auto-incrementing ID
-  profilePic String? // Optional field (not required)
-  password   String  @default("secret")
-  username   String  @unique
-  email      String  @unique
-  posts      Post[] // One-to-many relationship with posts
+  id         Int      @id @default(autoincrement())
+  profilePic String?
+  password   String   // ❗ Remove default for security
+  username   String   @unique
+  email      String   @unique
+  budget     Budget[]
+  posts      Post[]
 }
 
 model Transaction {
   id                Int       @id @default(autoincrement())
-  price             String
+  price             Float     // Changed from String
   quantity          Int
   brand             String?
   name              String
-  dateOfManufacture String?
+  dateOfManufacture DateTime? // Changed from String
   dateOfExpiry      DateTime?
-  description       DateTime?
-  TransactionPic    String?
-  Category          String
-  budgetId          Int // Foreign key to Budget
-  budget            Budget    @relation(fields: [budgetId], references: [id]) // Many-to-one relationship
+  description       String?   // Fixed type
+  transactionPic    String?   // camelCase
+  category          Category  // enum + lowercase
+  budgetId          Int
+  budget            Budget    @relation(fields: [budgetId], references: [id])
 }
 
 model Budget {
-  id               Int           @id @default(autoincrement())
-  budgetAllocation Int?
-  budgetRemaining  Int?
-  budgetAddition   Int?
-  transactions     Transaction[] // One-to-many relationship with transactions
+  id               Int               @id @default(autoincrement())
+  user             User              @relation(fields: [userId], references: [id])
+  userId           Int
+  transactions     Transaction[]
+  allocations      BudgetAllocation[] // PascalCase
 }
 
-enum Category{
+enum Category {
   Food 
   Electronics
   Fashion
@@ -56,26 +57,21 @@ enum Category{
   Others
 }
 
-model budgetAllocation {
+model BudgetAllocation {  // PascalCase
   id               Int         @id @default(autoincrement())
   amount           Float    
-  category         String
-  period           String
+  category         Category    // Use enum
+  budget           Budget      @relation(fields: [budgetId], references: [id])
+  budgetId         Int
+  period           String      // Consider DateTime for start/end dates
   notes            String?
-  budgetAdditions  budgetAddition[]
+  adjustments      BudgetAdjustment[] // Consolidated
 }
 
-model budgetRemaining {
-  id              Int          @id @default(autoincrement())
-  amount          Float
+model BudgetAdjustment {  // Consolidated model
+  id               Int         @id @default(autoincrement())
+  type             String      // "ADDITION", "DELETION", "REMAINING"
+  amount           Float
+  allocation       BudgetAllocation @relation(fields: [allocationId], references: [id])
+  allocationId     Int
 }
-
-
-model budgetAddition {
-  id                  Int                  @id @default(autoincrement())
-  amount              Float
-  budgetAllocationId  Int?  // Make it optional first
-  budgetAllocation    budgetAllocation? @relation(fields: [budgetAllocationId], references: [id])
-}
-
-
