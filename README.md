@@ -6,6 +6,8 @@ dipesh@dipesh-Inspiron-3501:~/Desktop/summarizevideoai$ sudo chmod u+rw data/red
 dipesh@dipesh-Inspiron-3501:~/Desktop/summarizevideoai$ 
 sudo chown -R dipesh:dipesh data/db/
 sudo chmod -R 755 data/db/
+sudo chmod 644 data/redis/dump.rdb
+
  npx prisma migrate dev
 npx prisma migrate dev --create-only
 

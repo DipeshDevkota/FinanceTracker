@@ -74,4 +74,6 @@ model BudgetAdjustment {  // Consolidated model
   amount           Float
   allocation       BudgetAllocation @relation(fields: [allocationId], references: [id])
   allocationId     Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now())
 }

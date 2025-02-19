@@ -237,38 +237,114 @@ export const budgetDeleteById = async(
   res:Response,
   next:NextFunction
 )=>{
-  // try {
-  //   console.log("Deleting the budget controller is called!")
-  //   const {id} = req.params;
-  //   const numericId= Number(id);
+  try {
+    console.log("Deleting the budget controller is called!")
+    const {id} = req.params;
+    const numericId= Number(id);
+   
+    const {amount} = req.body;
+    const amountToDelete = Number(amount)
+    const user = req.user;
+    const userId = user?.id
+    if(!userId)
+    {
+      res.status(404).json({message:"User is not authenticated"})
+      return;
+    }
 
-  //   const user = req.user;
-  //   const userId = user?.id
-  //   if(!userId)
-  //   {
-  //     res.status(404).json({message:"User is not authenticated"})
-  //     return;
-  //   }
+    const existingBudgetId= await prisma.budgetAllocation.findUnique({
+      where:{id: numericId}
+    });
 
-  //   const existingBudgetId= await prisma.budgetAllocation.findUnique({
-  //     where:{id: numericId}
-  //   });
+    if(!existingBudgetId)
+    {
+      res.status(404).json({message:"Budgetwith this Id doesn't exist!"})
+      return;
+    }
 
-  //   if(!existingBudgetId)
-  //   {
-  //     res.status(404).json({message:"Budgetwith this Id doesn't exist!"})
-  //     return;
-  //   }
+    if(amountToDelete <= 0)
+    {
+      res.status(400).json({message:"Please provide a valid amount to delete!"});
+      return;
+    }
+
+    const existingBudgetWithUser = await prisma.budget.findUnique({
+    where :{ id:numericId},
+    include:{user:true}
+    });
+
+    if(!existingBudgetWithUser)
+    {
+      res.status(404).json({message:"Budget of this User doesn't exist!"})
+      return;
+    }
+
+    if(existingBudgetWithUser.userId !== userId)
+    {
+      res.status(404).json({message:"User is not authenticated"})
+      return;
+    }
 
 
+    if(existingBudgetId.amount < amountToDelete)
+    {
+      res.status(400).json({
+        message:"Cannot delete more than the existing budget amount",
+      })
+      return;
+
+    }
 
 
+    const newAmount = existingBudgetId.amount - amountToDelete;
+
+    const updateBudget = await prisma.budgetAllocation.update({
+      where:{id: numericId},
+      data:{amount: newAmount}
+    })
+
+    const deletionRecord = await prisma.budgetAdjustment.create({
+      data:{
+        amount: -amountToDelete,
+        type:'DELETION',
+        allocation:{
+          connect:{id: numericId}
+        }
+      }
+    });
 
 
+    res.status(200).json({
+      message:"Budget amount deleted successfully!",
+     budget:{
+      id: updateBudget.id,
+      previousAmount: existingBudgetId.amount,
+      deletedAmount : amountToDelete,
+      currentAmount : updateBudget.amount,
+      category: updateBudget.category,
+      period: updateBudget.period,
+      notes: updateBudget.notes,
+      // lastUpdated: updateBudget.updatedAt
+     },
+     deletion:{
+      id: deletionRecord.id,
+      amount: deletionRecord.amount
+     }
+      
+    });
+
+    return;
     
-  // } catch (error) {
+  } catch (error) {
+
+    console.error("Error in budgetDeleteById",error):
+    res.status(500).json({
+      message:"Internal server error while deleting budget amount",
+      error: error instanceof Error ? error.message :"Unknown error"
+    });
+    return;
     
-  // }
+  }
 }
 export const viewBudgetById = async (
   req: Request,
@@ -304,4 +380,97 @@ export const viewBudgetById = async (
     return;
   }
 };
+
+
+
 //budgetAddition and budgetRemaining controllers to be made
+
+export const budgetRemaining = async(
+  req: RequestWithUser,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log("Budget remaining controller is called!");
+    const { id } = req.params;
+    const numericId = Number(id);
+
+    const user = req.user;
+    const userId = user?.id;
+    if (!userId) {
+      res.status(404).json({ message: "User is not authenticated" });
+      return;
+    }
+
+    // Get the budget allocation
+    const budgetAllocation = await prisma.budgetAllocation.findUnique({
+      where: { id: numericId },
+      include: {
+        adjustments: true // Include all adjustments (additions and deletions)
+      }
+    });
+
+    if (!budgetAllocation) {
+      res.status(404).json({ message: "Budget allocation not found" });
+      return;
+    }
+
+    // Verify user owns the budget
+    const existingBudgetWithUser = await prisma.budget.findUnique({
+      where: { id: numericId },
+      include: { user: true }
+    });
+
+    if (!existingBudgetWithUser || existingBudgetWithUser.userId !== userId) {
+      res.status(403).json({ message: "User is not authorized to view this budget" });
+      return;
+    }
+
+    // Calculate total adjustments
+    const totalAdjustments = budgetAllocation.adjustments.reduce((sum, adjustment) => 
+      sum + adjustment.amount, 0);
+
+    // Calculate remaining budget
+    const initialAmount = budgetAllocation.amount;
+    const remainingAmount = initialAmount + totalAdjustments;
+
+    // Calculate percentage remaining
+    const percentageRemaining = ((remainingAmount / initialAmount) * 100).toFixed(2);
+
+    // Get recent transactions
+  const recentAdjustments = budgetAllocation.adjustments
+  .sort((a,b)=> b.createdAt.getTime()- a.createdAt.getTime())
+  .slice(0,5)
+
+    res.status(200).json({
+      message: "Budget remaining details retrieved successfully",
+      budget: {
+        id: budgetAllocation.id,
+        category: budgetAllocation.category,
+        period: budgetAllocation.period,
+        initialAmount,
+        remainingAmount,
+        percentageRemaining: `${percentageRemaining}%`,
+        totalSpent: initialAmount - remainingAmount,
+      },
+      recentTransactions: recentAdjustments.map(adj =>({
+        id: adj.id,
+        amount: adj.amount,
+        type: adj.type,
+        date: adj.createdAt
+      })),
+      status: remainingAmount <= 0 ? "DEPLETED" : 
+              remainingAmount < (initialAmount * 0.2) ? "LOW" : 
+              remainingAmount < (initialAmount * 0.5) ? "MODERATE" : "HEALTHY"
+    });
+    return;
+
+  } catch (error) {
+    console.error("Error in budgetRemaining:", error);
+    res.status(500).json({ 
+      message: "Internal server error while fetching remaining budget",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+    return;
+  }
+};
