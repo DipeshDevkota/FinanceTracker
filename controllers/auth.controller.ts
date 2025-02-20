@@ -54,7 +54,7 @@ const generateToken = async (
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: rememberMe ? 15 * 60 * 1000 :1 * 30 * 1000,
+      maxAge: rememberMe ? 15 * 60 * 1000 :10 * 60 * 1000,
     });
 
     console.log("Access token generated:", accessToken);
@@ -128,6 +128,8 @@ export const loginUser = async (
   }
   console.log("ok");
   try {
+
+
     const userExists = await prisma.user.findUnique({ where: { email } });
     if (!userExists) {
       res.status(404).json({ message: "User doesn't exist" });
@@ -139,6 +141,7 @@ export const loginUser = async (
       res.status(400).json({ message: "Invalid password" });
       return;
     }
+  
 
     generateToken(res, userExists, rememberMe);
   } catch (error) {
@@ -182,7 +185,28 @@ export const updateUser = async (
     return;
   }
 
+
   try {
+     const redisKey = `user:${user.id}`;
+     console.log("RedisKey in Cache is:",redisKey)
+
+     //Check if user data exists in Redis cache
+
+     let cachedUser = await redisClient.get(redisKey);
+     console.log("CachedUser is:",cachedUser);
+
+     if(cachedUser)
+     {
+      console.log("User retreievd from cache");
+       res.status(200).json({
+        message:"User fetched from cache",
+        user:JSON.parse(cachedUser)
+       })
+       return
+      }
+    
+     
+
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: { username, profilePic },
@@ -190,9 +214,15 @@ export const updateUser = async (
     });
 
     console.log("Updated user:", updatedUser);
+
+    await redisClient.setex(redisKey,3600,JSON.stringify(updateUser));
+
+
     res
       .status(200)
       .json({ message: "User updated successfully", newUser: updatedUser });
+      return
+    
   } catch (error) {
     console.error("Error in updating user:", error);
     res.status(500).json({ message: "Internal server error" });

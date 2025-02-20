@@ -66,9 +66,20 @@ model BudgetAllocation {  // PascalCase
   period           String      // Consider DateTime for start/end dates
   notes            String?
   adjustments      BudgetAdjustment[] // Consolidated
+  addition         BudgetAddition[]
 }
 
 model BudgetAdjustment {  // Consolidated model
+  id               Int         @id @default(autoincrement())
+  type             String      // "ADDITION", "DELETION", "REMAINING"
+  amount           Float
+  allocation       BudgetAllocation @relation(fields: [allocationId], references: [id])
+  allocationId     Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now())
+}
+
+model BudgetAddition {  // Consolidated model
   id               Int         @id @default(autoincrement())
   type             String      // "ADDITION", "DELETION", "REMAINING"
   amount           Float

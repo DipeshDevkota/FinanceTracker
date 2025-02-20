@@ -26,18 +26,18 @@ export const addTransaction = async (
       dateOfManufacture,
       dateOfExpiry,
       description,
-      TransactionPic,
-      Category,
+      transactionPic,
+      category,
       budgetId
     } = req.body;
 
-    if (!price || !quantity || !name || !brand || !Category) {
+    if (!price || !quantity || !name || !brand || !category) {
        res.status(400).json({ message: "All fields are required!" });
        return
     }
 
     const existingTransaction = await prisma.transaction.findFirst({
-      where: { name, Category },
+      where: { name, category },
     });
 
     if (existingTransaction) {
@@ -57,8 +57,8 @@ export const addTransaction = async (
         dateOfManufacture,
         dateOfExpiry,
         description,
-        TransactionPic,
-        Category,
+        transactionPic,
+        category,
         budgetId
       },
     });
