@@ -1,9 +1,10 @@
-import { PrismaClient } from "@prisma/client";
+import { Category, PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import { BudgetAllocationSchema, BudgetSchema } from "../types/zodSchema";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { User } from "../types/userType";
 import { redisClient } from "../redis/client";
+import { connect } from "http2";
 const prisma = new PrismaClient();
 
 const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -56,6 +57,32 @@ export const categorizeTransaction = async (
   }
 };
 
+
+export const createBudget = async(
+  req:RequestWithUser,
+  res:Response,
+  next:NextFunction
+):Promise<void>=>{
+  console.log("Create Budget controller is called!");
+  const user = req.user;
+  const userId = user?.id;
+  if (!userId) {
+    res.status(404).json({ message: "User is not authenticated" });
+    return;
+  }
+  
+  const newBudget = await prisma.budget.create({
+    data:{
+      userId: userId
+    }
+  });
+
+  console.log("New Budget is :",newBudget)
+
+   res.status(200).json({message:"New Budget is created succesfully",newBudget});
+   return
+
+}
 export const budgetAllocation = async (
   req: Request,
   res: Response,
@@ -119,16 +146,18 @@ export const budgetAllocation = async (
     console.log("Sanitized period:", sanitizedPeriod);
 
     // Store budget allocation in the database
-    // const newBudget = await prisma.budgetAllocation.create({
-    //   data: {
-    //     amount,
-    //     category: sanitizedCategory,
-    //     notes: sanitizedNotes,
-    //     period: sanitizedPeriod,
-    //   },
-    // });
+    const newBudget = await prisma.budgetAllocation.create({
+      data: {
+        amount,
+        category: sanitizedCategory as Category,
+        notes: sanitizedNotes,
+        period: sanitizedPeriod,
+ 
+      },
 
-    // console.log("NewBudget is:", newBudget);
+    });
+
+    console.log("NewBudget is:", newBudget);
 
     res.status(201).json({ message: "Budget allocated successfully!" });
     return;
@@ -520,6 +549,52 @@ export const budgetHistory = async (
     });
   } catch (error) {
     console.error("Error in budgetHistory:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+export const budgetInsight = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    console.log("Budget Insight is called!");
+
+    // Aggregate budget allocations by category
+    const categoryStats = await prisma.budgetAllocation.groupBy({
+      by: ["category"],
+      _count: { id: true }, // Count the number of allocations
+      _sum: { amount: true }, // Sum the total budget per category
+      orderBy: { _count: { id: "desc" } }, // Sort by most frequent category
+    });
+
+    console.log("Category Stats is :",categoryStats)
+
+    if (!categoryStats.length) {
+       res.status(404).json({ message: "No budget allocations found" });
+       return
+    }
+    console.log("Category Stats Length is :",categoryStats.length)
+
+
+    // Find the category with the most allocations
+    const mostUsedCategory = categoryStats[0];
+    console.log("MostUsed Category used is :",mostUsedCategory)
+
+
+    res.status(200).json({
+      message: "Budget insights retrieved successfully",
+      insights: {
+        mostUsedCategory: mostUsedCategory.category,
+        totalAllocations: mostUsedCategory._count.id,
+        totalAmount: mostUsedCategory._sum.amount,
+        allCategories: categoryStats,
+      },
+    });
+  } catch (error) {
+    console.error("Error in budgetInsight:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

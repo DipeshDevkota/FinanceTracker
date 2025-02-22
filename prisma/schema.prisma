@@ -61,8 +61,8 @@ model BudgetAllocation {  // PascalCase
   id               Int         @id @default(autoincrement())
   amount           Float    
   category         Category    // Use enum
-  budget           Budget      @relation(fields: [budgetId], references: [id])
-  budgetId         Int
+  budget           Budget?     @relation(fields: [budgetId], references: [id])
+  budgetId         Int?
   period           String      // Consider DateTime for start/end dates
   notes            String?
   adjustments      BudgetAdjustment[] // Consolidated
