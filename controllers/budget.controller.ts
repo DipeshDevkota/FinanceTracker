@@ -582,6 +582,23 @@ export const budgetInsight = async (
     // Find the category with the most allocations
     const mostUsedCategory = categoryStats[0];
     console.log("MostUsed Category used is :",mostUsedCategory)
+    
+    const categoryStatsLess= await prisma.budgetAllocation.groupBy({
+      by:["category"],
+      _count:{id: true},
+      _sum :{amount:true},
+      orderBy:{_count:{id:"asc"}}
+    })
+
+    if (!categoryStatsLess.length) {
+      res.status(404).json({ message: "No budget allocations found" });
+      return
+   }
+   console.log("Category Stats Length is :",categoryStatsLess.length)
+
+   const lessUsedCategory = categoryStatsLess[0];
+   console.log("MostUsed Category used is :",lessUsedCategory)
+
 
 
     res.status(200).json({
@@ -591,6 +608,8 @@ export const budgetInsight = async (
         totalAllocations: mostUsedCategory._count.id,
         totalAmount: mostUsedCategory._sum.amount,
         allCategories: categoryStats,
+        lessUsedCategory: lessUsedCategory.category,
+        totalAllocationsOfLessBudget:lessUsedCategory._count.id,
       },
     });
   } catch (error) {

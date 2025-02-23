@@ -11,7 +11,7 @@ budgetRouter.post('/viewBudgetById/:id',authUser,viewBudgetById)
 budgetRouter.get('/budgetHistory/:id',authUser,budgetHistory)
 budgetRouter.get('/budgetRemaining/:id',authUser,budgetRemaining)
 budgetRouter.get('/budgetInsight',authUser,budgetInsight)
-budgetRouter.get('/createBudget',authUser,createBudget)
+budgetRouter.post('/createBudget',authUser,createBudget)
 
 
 
