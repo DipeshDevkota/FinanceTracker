@@ -159,7 +159,7 @@ export const budgetAllocation = async (
 
     console.log("NewBudget is:", newBudget);
 
-    res.status(201).json({ message: "Budget allocated successfully!" });
+    res.status(201).json({ message: "Budget allocated successfully!" ,newBudget});
     return;
   } catch (error) {
     console.error("Error in budgetAllocation:", error);

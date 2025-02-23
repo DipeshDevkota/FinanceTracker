@@ -1,8 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Category, PrismaClient } from "@prisma/client";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
+
 dotenv.config();
+
 
 const prisma = new PrismaClient();
 const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -27,17 +29,20 @@ export const addTransaction = async (
       dateOfExpiry,
       description,
       transactionPic,
-      category,
-      budgetId
+      category, // This will now contain the category set in categorizeTransaction
     } = req.body;
 
-    if (!price || !quantity || !name || !brand ) {
+
+    console.log("req",req.body)
+    console.log("req categiry",req.body.category)
+
+    if (!price || !quantity || !name || !brand || !category) {
        res.status(400).json({ message: "All fields are required!" });
-       return
+       return;
     }
 
     const existingTransaction = await prisma.transaction.findFirst({
-      where: { name, category },
+      where: { name },
     });
 
     if (existingTransaction) {
@@ -48,6 +53,18 @@ export const addTransaction = async (
       return
     }
 
+
+    const {budgetId} = req.params;
+    const NumericBudgetId = Number(budgetId)
+    console.log("Budgetid is :",budgetId)
+    console.log("caet",category)
+    console.log("type",typeof(category))
+    if(!Object.values(Category).includes(category))
+    {
+      throw new Error("Invalid Category ")
+    }
+
+    console.log("Hello")
     const newTransaction = await prisma.transaction.create({
       data: {
         price,
@@ -58,27 +75,23 @@ export const addTransaction = async (
         dateOfExpiry,
         description,
         transactionPic,
-        category,
-        budgetId
+        category: category , // Now this is guaranteed to be a valid enum
+        budgetId:NumericBudgetId,
       },
     });
 
-    ///when doing transaction if that goes to 1000$ of budgetAllocation. notification should be sent ? do you want to extend the budget???
-    //if yes . budgetaddidtioncontroller call
+    // Check if transaction exceeds the budget
 
-     res.status(200).json({
+    res.status(200).json({
       message: "New transaction added successfully.",
       newTransaction,
     });
-    return
   } catch (error) {
     console.error("Error adding transaction:", error);
-     res
-      .status(500)
-      .json({ message: "Server error while creating transaction." });
-      return
+    res.status(500).json({ message: "Server error while creating transaction." });
   }
 };
+
 
 export const categorizeTransaction = async (
   req: Request,
@@ -89,17 +102,17 @@ export const categorizeTransaction = async (
     const { name } = req.body;
 
     if (!name) {
-       res.status(400).json({ message: "Product name is required!" });
-       return
+      res.status(400).json({ message: "Product name is required!" });
+      return; // End the middleware if there's an error
     }
 
-    const model = genAI.getGenerativeModel({model:"gemini-1.5-flash"})
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       Categorize this product based on its details:
       Name: ${name || "N/A"}
 
-      Categories: Food, Electronics, Fashion, Healthcare, Others.  Respond with ONLY the category name. Do not include any other text.
+      Categories: Food, Electronics, Fashion, Healthcare, Others. Respond with ONLY the category name (use uppercase). Do not include any other text.
     `;
 
     const result = await model.generateContent({
@@ -107,17 +120,21 @@ export const categorizeTransaction = async (
     });
 
     const response = await result.response;
-    console.log("Response is :",response);
-    const text= response.text();
-    console.log("Text is:",text)
+    const text = response.text().trim().toUpperCase(); // Trim whitespace and convert to uppercase
 
-    res.status(200).json({message:`${name} lies in ${text}`,text})
-    return;
+    // Validate against enum values
+    const validCategories = ['FOOD', 'ELECTRONICS', 'FASHION', 'HEALTHCARE', 'OTHERS'];
 
+    if (!validCategories.includes(text)) {
+      throw new Error(`Invalid category: ${text}`);
+    }
+
+    req.body.category = text as Category; // Assigning the validated category to req.body
+
+    next(); // Call next to proceed to the next middleware or route handler
   } catch (error) {
     console.error("Error categorizing transaction:", error);
-     res.status(500).json({ message: "Server error while categorizing transaction." });
-     return
+    res.status(500).json({ message: "Server error while categorizing transaction." });
   }
 };
 

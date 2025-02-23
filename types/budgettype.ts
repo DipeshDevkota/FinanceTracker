@@ -5,15 +5,6 @@ export interface Budget {
   budgetAddition: number;
 }
 
-export enum Category {
-  Food = "Food",
-  Electronics = "Electronics",
-  Fashion = "Fashion",
-  Healthcare = "Healthcare",
-  Others = "Others",
-}
-
-
 export interface budgetAllocation {
   id: number;
   amount:number;

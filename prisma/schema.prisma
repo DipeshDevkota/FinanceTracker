@@ -50,11 +50,11 @@ model Budget {
 }
 
 enum Category {
-  Food 
-  Electronics
-  Fashion
-  Healthcare
-  Others
+  FOOD 
+  ELECTRONICS
+  FASHION
+  HEALTHCARE
+  OTHERS
 }
 
 model BudgetAllocation {  // PascalCase
