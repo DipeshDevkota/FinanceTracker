@@ -91,6 +91,16 @@ export const budgetAllocation = async (
   console.log("BudgetAllocation route called!");
 
   try {
+
+    const {budgetId} = req.params;
+    console.log("BudgetId is",budgetId)
+    if(!budgetId)
+    {
+      res.status(404).json({message:"BudgetCreation Id is not provided!"})
+      return
+    }
+
+    const numericBudget= Number(budgetId)
     if (!req.body) {
       res.status(400).json({ message: "Request body is missing!" });
       return;
@@ -149,7 +159,7 @@ export const budgetAllocation = async (
     const newBudget = await prisma.budgetAllocation.create({
       data: {
         amount,
-        category: sanitizedCategory as Category,
+        budgetId:numericBudget,
         notes: sanitizedNotes,
         period: sanitizedPeriod,
  
@@ -354,7 +364,6 @@ export const budgetDeleteById = async (
         previousAmount: existingBudgetId.amount,
         deletedAmount: amountToDelete,
         currentAmount: updateBudget.amount,
-        category: updateBudget.category,
         period: updateBudget.period,
         notes: updateBudget.notes,
         // lastUpdated: updateBudget.updatedAt
@@ -480,7 +489,6 @@ export const budgetRemaining = async (
       message: "Budget remaining details retrieved successfully",
       budget: {
         id: budgetAllocation.id,
-        category: budgetAllocation.category,
         period: budgetAllocation.period,
         initialAmount,
         remainingAmount,
@@ -553,67 +561,67 @@ export const budgetHistory = async (
   }
 };
 
+//transactionInsight
+// export const budgetInsight = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     console.log("Budget Insight is called!");
 
-export const budgetInsight = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    console.log("Budget Insight is called!");
+//     // Aggregate budget allocations by category
+//     const categoryStats = await prisma.budgetAllocation.groupBy({
+//       by: ["category"],
+//       _count: { id: true }, // Count the number of allocations
+//       _sum: { amount: true }, // Sum the total budget per category
+//       orderBy: { _count: { id: "desc" } }, // Sort by most frequent category
+//     });
 
-    // Aggregate budget allocations by category
-    const categoryStats = await prisma.budgetAllocation.groupBy({
-      by: ["category"],
-      _count: { id: true }, // Count the number of allocations
-      _sum: { amount: true }, // Sum the total budget per category
-      orderBy: { _count: { id: "desc" } }, // Sort by most frequent category
-    });
+//     console.log("Category Stats is :",categoryStats)
 
-    console.log("Category Stats is :",categoryStats)
-
-    if (!categoryStats.length) {
-       res.status(404).json({ message: "No budget allocations found" });
-       return
-    }
-    console.log("Category Stats Length is :",categoryStats.length)
+//     if (!categoryStats.length) {
+//        res.status(404).json({ message: "No budget allocations found" });
+//        return
+//     }
+//     console.log("Category Stats Length is :",categoryStats.length)
 
 
-    // Find the category with the most allocations
-    const mostUsedCategory = categoryStats[0];
-    console.log("MostUsed Category used is :",mostUsedCategory)
+//     // Find the category with the most allocations
+//     const mostUsedCategory = categoryStats[0];
+//     console.log("MostUsed Category used is :",mostUsedCategory)
     
-    const categoryStatsLess= await prisma.budgetAllocation.groupBy({
-      by:["category"],
-      _count:{id: true},
-      _sum :{amount:true},
-      orderBy:{_count:{id:"asc"}}
-    })
+//     const categoryStatsLess= await prisma.budgetAllocation.groupBy({
+//       by:["category"],
+//       _count:{id: true},
+//       _sum :{amount:true},
+//       orderBy:{_count:{id:"asc"}}
+//     })
 
-    if (!categoryStatsLess.length) {
-      res.status(404).json({ message: "No budget allocations found" });
-      return
-   }
-   console.log("Category Stats Length is :",categoryStatsLess.length)
+//     if (!categoryStatsLess.length) {
+//       res.status(404).json({ message: "No budget allocations found" });
+//       return
+//    }
+//    console.log("Category Stats Length is :",categoryStatsLess.length)
 
-   const lessUsedCategory = categoryStatsLess[0];
-   console.log("MostUsed Category used is :",lessUsedCategory)
+//    const lessUsedCategory = categoryStatsLess[0];
+//    console.log("MostUsed Category used is :",lessUsedCategory)
 
 
 
-    res.status(200).json({
-      message: "Budget insights retrieved successfully",
-      insights: {
-        mostUsedCategory: mostUsedCategory.category,
-        totalAllocations: mostUsedCategory._count.id,
-        totalAmount: mostUsedCategory._sum.amount,
-        allCategories: categoryStats,
-        lessUsedCategory: lessUsedCategory.category,
-        totalAllocationsOfLessBudget:lessUsedCategory._count.id,
-      },
-    });
-  } catch (error) {
-    console.error("Error in budgetInsight:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+//     res.status(200).json({
+//       message: "Budget insights retrieved successfully",
+//       insights: {
+//         mostUsedCategory: mostUsedCategory.category,
+//         totalAllocations: mostUsedCategory._count.id,
+//         totalAmount: mostUsedCategory._sum.amount,
+//         allCategories: categoryStats,
+//         lessUsedCategory: lessUsedCategory.category,
+//         totalAllocationsOfLessBudget:lessUsedCategory._count.id,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error in budgetInsight:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
