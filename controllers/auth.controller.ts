@@ -15,7 +15,6 @@ interface RequestWithUser extends Request {
 
 
 
-const CACHE_EXPIRATION =50;
 const generateToken = async (
   res: Response,
   user: User,
