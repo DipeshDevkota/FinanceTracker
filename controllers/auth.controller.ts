@@ -40,16 +40,16 @@ const generateToken = async (
     });
 
     const redis = await redisClient.set(
-      `refreshToken:${user.id}`,
+     ,
       refreshToken,
-      "EX",
+  
       30 * 24 * 60 * 60
     );
     console.log("Redis is:", redis);
 
     await redisClient.expire(CACHE_KEY,CACHE_EXPIRATION);
 
-    res.cookie("token", refreshToken, {
+    res.cookie("", , {
       httpOnly: true,
       secure: true,
       sameSite: "none",
@@ -157,7 +157,7 @@ export const logoutUser = async (
 ): Promise<void> => {
   try {
     console.log("Logout called!");
-    res.clearCookie("token");
+    res.clearCookie("");
     res.status(200).json({ message: "User logged out successfully" });
   } catch (error) {
     console.error("Error in logging out user:", error);
@@ -186,12 +186,11 @@ export const updateUser = async (
 
 
   try {
-     const redisKey = `user:${user.id}`;
+     const redisKey = ``;
      console.log("RedisKey in Cache is:",redisKey)
 
      //Check if user data exists in Redis cache
 
-     let cachedUser = await redisClient.get(redisKey);
      console.log("CachedUser is:",cachedUser);
 
      if(cachedUser)
@@ -214,7 +213,7 @@ export const updateUser = async (
 
     console.log("Updated user:", updatedUser);
 
-    await redisClient.setex(redisKey,3600,JSON.stringify(updateUser));
+    await redisClient.setex(,,JSON.stringify(updateUser));
 
 
     res
